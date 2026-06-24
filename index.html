@@ -8,580 +8,275 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ── TOKENS ─────────────────────────────────────────── */
         :root {
-            --bg-base:      #080C14;
-            --bg-surface:   #0D1220;
-            --bg-raised:    #131926;
-            --bg-hover:     #1A2235;
-            --border:       #1E2A3D;
-            --border-focus: #3A506B;
-            --amber:        #E8C547;
-            --amber-dim:    rgba(232,197,71,0.12);
-            --amber-glow:   rgba(232,197,71,0.25);
-            --teal:         #3EC9A7;
-            --teal-dim:     rgba(62,201,167,0.12);
-            --red:          #E85D4A;
-            --red-dim:      rgba(232,93,74,0.12);
-            --text-primary: #E4EAF4;
+            --bg-base:       #080C14;
+            --bg-surface:    #0D1220;
+            --bg-raised:     #131926;
+            --bg-hover:      #1A2235;
+            --border:        #1E2A3D;
+            --border-focus:  #3A506B;
+            --amber:         #E8C547;
+            --amber-dim:     rgba(232,197,71,0.12);
+            --amber-glow:    rgba(232,197,71,0.25);
+            --teal:          #3EC9A7;
+            --teal-dim:      rgba(62,201,167,0.12);
+            --red:           #E85D4A;
+            --red-dim:       rgba(232,93,74,0.12);
+            --text-primary:  #E4EAF4;
             --text-secondary:#8892A4;
-            --text-muted:   #4A5568;
-            --mono:         'JetBrains Mono', monospace;
-            --sans:         'Inter', sans-serif;
-            --radius-sm:    8px;
-            --radius-md:    14px;
-            --radius-lg:    20px;
-            --shadow:       0 4px 24px rgba(0,0,0,0.4);
+            --text-muted:    #4A5568;
+            --mono:          'JetBrains Mono', monospace;
+            --sans:          'Inter', sans-serif;
+            --radius-sm:     8px;
+            --radius-md:     14px;
+            --radius-lg:     20px;
+            --shadow:        0 4px 24px rgba(0,0,0,0.4);
         }
-
-        /* ── RESET & BASE ──────────────────────────────────── */
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg-base); font-family:var(--sans); color:var(--text-primary); min-height:100vh; }
 
-        body {
-            background: var(--bg-base);
-            font-family: var(--sans);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
+        /* ── TOASTS ── */
+        #toast-container { position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+        .toast { background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 18px; font-size:0.875rem; color:var(--text-primary); display:flex; align-items:center; gap:10px; min-width:260px; box-shadow:var(--shadow); animation:toast-in 0.25s ease; pointer-events:all; }
+        .toast.success { border-left:3px solid var(--teal); }
+        .toast.error   { border-left:3px solid var(--red); }
+        .toast.info    { border-left:3px solid var(--amber); }
+        .toast.out     { animation:toast-out 0.25s ease forwards; }
+        @keyframes toast-in  { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
+        @keyframes toast-out { from{opacity:1;transform:none} to{opacity:0;transform:translateX(20px)} }
 
-        /* ── TOASTS ────────────────────────────────────────── */
-        #toast-container {
-            position: fixed;
-            top: 20px; right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-        }
-        .toast {
-            background: var(--bg-raised);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 12px 18px;
-            font-size: 0.875rem;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 260px;
-            box-shadow: var(--shadow);
-            animation: toast-in 0.25s ease;
-            pointer-events: all;
-        }
-        .toast.success { border-left: 3px solid var(--teal); }
-        .toast.error   { border-left: 3px solid var(--red); }
-        .toast.info    { border-left: 3px solid var(--amber); }
-        .toast.out     { animation: toast-out 0.25s ease forwards; }
-        @keyframes toast-in  { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:none; } }
-        @keyframes toast-out { from { opacity:1; transform:none; } to { opacity:0; transform:translateX(20px); } }
+        /* ── MODALS ── */
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(5px); z-index:1000; display:none; align-items:center; justify-content:center; padding:20px; }
+        .modal-overlay.active { display:flex; }
+        .modal { background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px; width:100%; box-shadow:0 24px 64px rgba(0,0,0,0.6); }
+        .modal-sm  { max-width:400px; }
+        .modal-lg  { max-width:720px; max-height:88vh; overflow-y:auto; }
+        .modal h3  { font-size:1.05rem; margin-bottom:8px; }
+        .modal p   { color:var(--text-secondary); font-size:0.88rem; margin-bottom:20px; line-height:1.6; }
+        .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
 
-        /* ── MODAL ─────────────────────────────────────────── */
-        .modal-overlay {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal {
-            background: var(--bg-raised);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 32px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-        }
-        .modal h3 { font-size: 1.1rem; margin-bottom: 10px; }
-        .modal p  { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; line-height: 1.5; }
-        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-
-        /* ── HEADER ────────────────────────────────────────── */
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 32px;
-            border-bottom: 1px solid var(--border);
-            background: var(--bg-surface);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header-brand {
-            display: flex;
-            align-items: baseline;
-            gap: 14px;
-        }
-        .header-brand h1 {
-            font-family: var(--mono);
-            font-size: 1.05rem;
-            font-weight: 700;
-            letter-spacing: 0.03em;
-            color: var(--amber);
-        }
-        .header-brand span {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-        .db-pill {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            background: var(--bg-raised);
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            padding: 6px 14px;
-            transition: border-color 0.3s;
-        }
-        .db-pill.ok     { border-color: var(--teal); color: var(--teal); }
-        .db-pill.error  { border-color: var(--red);  color: var(--red); }
-        .db-pill .dot {
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: currentColor;
-            flex-shrink: 0;
-        }
-        .db-pill.loading .dot { animation: blink 1s infinite; }
+        /* ── HEADER ── */
+        .header { display:flex; align-items:center; justify-content:space-between; padding:18px 32px; border-bottom:1px solid var(--border); background:var(--bg-surface); position:sticky; top:0; z-index:100; }
+        .header-brand { display:flex; align-items:baseline; gap:14px; }
+        .header-brand h1 { font-family:var(--mono); font-size:1.05rem; font-weight:700; color:var(--amber); letter-spacing:0.03em; }
+        .header-brand span { font-size:0.75rem; color:var(--text-muted); letter-spacing:0.08em; text-transform:uppercase; }
+        .header-right { display:flex; align-items:center; gap:12px; }
+        .db-pill { display:flex; align-items:center; gap:8px; font-size:0.75rem; color:var(--text-secondary); background:var(--bg-raised); border:1px solid var(--border); border-radius:999px; padding:6px 14px; transition:border-color 0.3s; }
+        .db-pill.ok    { border-color:var(--teal); color:var(--teal); }
+        .db-pill.error { border-color:var(--red);  color:var(--red); }
+        .db-pill .dot  { width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
+        .db-pill.loading .dot { animation:blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+        .sync-indicator { display:none; align-items:center; gap:6px; font-size:0.72rem; color:var(--text-muted); }
+        .sync-indicator.active { display:flex; }
+        .sync-spinner { width:10px; height:10px; border:2px solid var(--border); border-top-color:var(--amber); border-radius:50%; animation:spin 0.7s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
 
-        /* ── LAYOUT ────────────────────────────────────────── */
-        .main-layout {
-            display: grid;
-            grid-template-columns: 340px 1fr;
-            gap: 0;
-            min-height: calc(100vh - 65px);
-        }
+        /* ── TABS ── */
+        .tabs { display:flex; border-bottom:1px solid var(--border); background:var(--bg-surface); padding:0 32px; gap:0; }
+        .tab-btn { padding:14px 20px; font-size:0.82rem; font-weight:600; color:var(--text-muted); background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; letter-spacing:0.03em; }
+        .tab-btn:hover { color:var(--text-secondary); }
+        .tab-btn.active { color:var(--amber); border-bottom-color:var(--amber); }
+        .tab-pane { display:none; }
+        .tab-pane.active { display:flex; }
 
-        /* ── SIDEBAR ───────────────────────────────────────── */
-        .sidebar {
-            border-right: 1px solid var(--border);
-            background: var(--bg-surface);
-            padding: 28px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-        .sidebar-section-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 14px;
-        }
+        /* ── LAYOUT INSIDE TABS ── */
+        .split-layout { display:grid; grid-template-columns:360px 1fr; min-height:calc(100vh - 115px); }
+        .sidebar { border-right:1px solid var(--border); background:var(--bg-surface); padding:28px 24px; display:flex; flex-direction:column; gap:20px; overflow-y:auto; }
+        .main-content { padding:28px 32px; display:flex; flex-direction:column; gap:24px; overflow:auto; }
 
-        /* ── FORM ──────────────────────────────────────────── */
-        .form-field { margin-bottom: 16px; }
-        .form-field label {
-            display: block;
-            font-size: 0.78rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 7px;
-        }
-        .input-text {
-            width: 100%;
-            background: var(--bg-raised);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            font-family: var(--sans);
-            font-size: 0.9rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .input-text:focus {
-            border-color: var(--amber);
-            outline: none;
-            box-shadow: 0 0 0 3px var(--amber-dim);
-        }
+        /* ── SIDEBAR ELEMENTS ── */
+        .section-label { font-size:0.68rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; }
+        .divider { height:1px; background:var(--border); }
+        .sidebar-footer { margin-top:auto; padding-top:16px; border-top:1px solid var(--border); }
 
-        /* ── YEAR INPUTS ───────────────────────────────────── */
-        .year-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            margin-bottom: 18px;
-        }
-        .year-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .year-cell label {
-            font-family: var(--mono);
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            letter-spacing: 0.05em;
-        }
-        .input-num {
-            width: 100%;
-            background: var(--bg-raised);
-            border: 1px solid var(--border);
-            color: var(--amber);
-            padding: 10px 4px;
-            border-radius: var(--radius-sm);
-            font-family: var(--mono);
-            font-size: 1.1rem;
-            font-weight: 700;
-            text-align: center;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            -moz-appearance: textfield;
-        }
-        .input-num::-webkit-outer-spin-button,
-        .input-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .input-num:focus {
-            border-color: var(--amber);
-            outline: none;
-            box-shadow: 0 0 0 3px var(--amber-dim);
-        }
-        .year-max {
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            font-family: var(--mono);
-        }
+        /* ── FORM ── */
+        .form-field { margin-bottom:14px; }
+        .form-field label { display:block; font-size:0.78rem; font-weight:500; color:var(--text-secondary); margin-bottom:6px; }
+        .input-text { width:100%; background:var(--bg-raised); border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; border-radius:var(--radius-sm); font-family:var(--sans); font-size:0.9rem; transition:border-color 0.2s,box-shadow 0.2s; }
+        .input-text:focus { border-color:var(--amber); outline:none; box-shadow:0 0 0 3px var(--amber-dim); }
 
-        /* ── MINI SIGNAL PREVIEW ───────────────────────────── */
-        .signal-preview {
-            height: 40px;
-            width: 100%;
-            border-radius: var(--radius-sm);
-            background: var(--bg-raised);
-            border: 1px solid var(--border);
-            margin-bottom: 18px;
-            overflow: hidden;
-        }
-        #signalSvg { width: 100%; height: 100%; }
+        /* ── SUBJECT SELECTOR ── */
+        .subject-year-group { margin-bottom:16px; }
+        .year-group-header { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; margin-bottom:6px; user-select:none; }
+        .year-group-header:hover { border-color:var(--border-focus); }
+        .year-group-title { font-size:0.78rem; font-weight:600; color:var(--text-secondary); }
+        .year-group-count { font-family:var(--mono); font-size:0.7rem; color:var(--amber); background:var(--amber-dim); padding:2px 8px; border-radius:4px; }
+        .year-group-chevron { font-size:0.7rem; color:var(--text-muted); transition:transform 0.2s; }
+        .year-group-chevron.open { transform:rotate(90deg); }
+        .subject-list { display:none; flex-direction:column; gap:3px; padding:0 2px; }
+        .subject-list.open { display:flex; }
+        .subject-item { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:6px; cursor:pointer; transition:background 0.12s; }
+        .subject-item:hover { background:var(--bg-hover); }
+        .subject-item input[type=checkbox] { width:15px; height:15px; accent-color:var(--amber); cursor:pointer; flex-shrink:0; }
+        .subject-item label { font-size:0.8rem; color:var(--text-secondary); cursor:pointer; line-height:1.3; }
+        .subject-item.checked label { color:var(--text-primary); }
 
-        /* ── BUTTONS ───────────────────────────────────────── */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            font-family: var(--sans);
-            font-size: 0.85rem;
-            font-weight: 600;
-            border: none;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            padding: 10px 20px;
-            transition: all 0.15s;
-            white-space: nowrap;
-        }
-        .btn-primary {
-            background: var(--amber);
-            color: var(--bg-base);
-        }
-        .btn-primary:hover { background: #F0D060; transform: translateY(-1px); box-shadow: 0 4px 16px var(--amber-glow); }
-        .btn-primary:active { transform: translateY(0); }
+        /* ── PROGRESS BAR ── */
+        .progress-summary { background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:14px; }
+        .progress-label { font-size:0.72rem; color:var(--text-muted); margin-bottom:8px; display:flex; justify-content:space-between; }
+        .progress-label span { font-family:var(--mono); color:var(--amber); }
+        .progress-track { height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+        .progress-fill  { height:100%; background:var(--amber); border-radius:2px; transition:width 0.3s; }
+        .progress-years { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:10px; }
+        .year-pip { text-align:center; }
+        .year-pip-bar { height:32px; background:var(--border); border-radius:3px; position:relative; overflow:hidden; margin-bottom:3px; }
+        .year-pip-fill { position:absolute; bottom:0; left:0; right:0; background:var(--amber); transition:height 0.3s; opacity:0.7; }
+        .year-pip-label { font-family:var(--mono); font-size:0.6rem; color:var(--text-muted); }
 
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-        }
-        .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-focus); }
+        /* ── SIGNAL PREVIEW ── */
+        .signal-preview { height:38px; width:100%; border-radius:var(--radius-sm); background:var(--bg-raised); border:1px solid var(--border); overflow:hidden; margin-bottom:4px; }
+        #signalSvg { width:100%; height:100%; }
+        .signal-legend { font-size:0.62rem; color:var(--text-muted); text-align:right; margin-bottom:14px; }
 
-        .btn-danger-ghost {
-            background: transparent;
-            color: var(--red);
-            border: 1px solid rgba(232,93,74,0.3);
-        }
-        .btn-danger-ghost:hover { background: var(--red-dim); border-color: var(--red); }
+        /* ── BUTTONS ── */
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; font-family:var(--sans); font-size:0.85rem; font-weight:600; border:none; border-radius:var(--radius-sm); cursor:pointer; padding:10px 20px; transition:all 0.15s; white-space:nowrap; }
+        .btn-primary { background:var(--amber); color:var(--bg-base); }
+        .btn-primary:hover { background:#F0D060; transform:translateY(-1px); box-shadow:0 4px 16px var(--amber-glow); }
+        .btn-primary:active { transform:translateY(0); }
+        .btn-ghost { background:transparent; color:var(--text-secondary); border:1px solid var(--border); }
+        .btn-ghost:hover { background:var(--bg-hover); color:var(--text-primary); border-color:var(--border-focus); }
+        .btn-teal { background:var(--teal-dim); color:var(--teal); border:1px solid rgba(62,201,167,0.3); }
+        .btn-teal:hover { background:var(--teal); color:var(--bg-base); }
+        .btn-danger-ghost { background:transparent; color:var(--red); border:1px solid rgba(232,93,74,0.3); }
+        .btn-danger-ghost:hover { background:var(--red-dim); border-color:var(--red); }
+        .btn-danger { background:var(--red-dim); color:var(--red); border:1px solid rgba(232,93,74,0.3); }
+        .btn-danger:hover { background:var(--red); color:white; }
+        .btn-sm  { padding:5px 10px; font-size:0.75rem; border-radius:6px; }
+        .btn-full { width:100%; }
 
-        .btn-danger {
-            background: var(--red-dim);
-            color: var(--red);
-            border: 1px solid rgba(232,93,74,0.3);
-        }
-        .btn-danger:hover { background: var(--red); color: white; }
+        /* ── KPI ROW ── */
+        .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+        .kpi { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 20px; position:relative; overflow:hidden; transition:border-color 0.2s; }
+        .kpi:hover { border-color:var(--border-focus); }
+        .kpi-label { font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
+        .kpi-value { font-family:var(--mono); font-size:1.75rem; font-weight:700; line-height:1; color:var(--amber); }
+        .kpi-sub   { font-size:0.7rem; color:var(--text-muted); margin-top:5px; }
+        .kpi-accent { position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--amber); opacity:0.4; }
+        .kpi.teal .kpi-value { color:var(--teal); }
+        .kpi.teal .kpi-accent { background:var(--teal); }
 
-        .btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: 6px; }
-        .btn-full { width: 100%; }
+        /* ── CARD ── */
+        .card { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:22px 24px; }
+        .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+        .card-title { font-size:0.8rem; font-weight:600; letter-spacing:0.05em; color:var(--text-secondary); text-transform:uppercase; }
+        .card-badge { font-family:var(--mono); font-size:0.68rem; color:var(--text-muted); background:var(--bg-raised); border:1px solid var(--border); border-radius:4px; padding:3px 8px; }
 
-        /* ── DIVIDER ───────────────────────────────────────── */
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 4px 0;
-        }
-        .sidebar-footer {
-            margin-top: auto;
-            padding-top: 16px;
-            border-top: 1px solid var(--border);
-        }
-        .student-count-label {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-        }
-        .student-count-label strong {
-            font-family: var(--mono);
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
+        /* ── CHARTS ── */
+        .charts-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+        .chart-wrap { position:relative; height:200px; }
+        .interpretation-chip { display:inline-flex; align-items:center; gap:8px; font-size:0.78rem; padding:8px 14px; border-radius:6px; margin-top:12px; background:var(--bg-raised); border:1px solid var(--border); color:var(--text-secondary); }
+        .interpretation-chip.ok     { border-color:rgba(62,201,167,0.4); background:var(--teal-dim); color:var(--teal); }
+        .interpretation-chip.warn   { border-color:rgba(232,197,71,0.4); background:var(--amber-dim); color:var(--amber); }
+        .interpretation-chip.danger { border-color:rgba(232,93,74,0.4);  background:var(--red-dim);  color:var(--red); }
 
-        /* ── MAIN CONTENT ──────────────────────────────────── */
-        .main-content {
-            padding: 28px 32px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            overflow: auto;
-        }
+        /* ── TABLE ── */
+        .table-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+        thead th { padding:10px 12px; text-align:left; font-family:var(--mono); font-size:0.67rem; letter-spacing:0.08em; color:var(--text-muted); text-transform:uppercase; border-bottom:1px solid var(--border); white-space:nowrap; }
+        tbody td { padding:11px 12px; border-bottom:1px solid var(--border); color:var(--text-secondary); transition:background 0.15s; }
+        tbody tr:hover td { background:var(--bg-raised); }
+        tbody tr:last-child td { border-bottom:none; }
+        .td-name { font-weight:600; color:var(--text-primary); }
+        .td-mono { font-family:var(--mono); font-size:0.8rem; }
+        .q-chip { font-family:var(--mono); font-size:0.75rem; padding:2px 8px; border-radius:4px; font-weight:700; }
+        .q-high { background:rgba(62,201,167,0.15); color:var(--teal); }
+        .q-mid  { background:rgba(232,197,71,0.15);  color:var(--amber); }
+        .q-low  { background:rgba(232,93,74,0.15);   color:var(--red); }
 
-        /* ── KPI ROW ───────────────────────────────────────── */
-        .kpi-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-        }
-        .kpi {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 18px 20px;
-            position: relative;
-            overflow: hidden;
-            transition: border-color 0.2s;
-        }
-        .kpi:hover { border-color: var(--border-focus); }
-        .kpi-label {
-            font-size: 0.7rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-        .kpi-value {
-            font-family: var(--mono);
-            font-size: 1.8rem;
-            font-weight: 700;
-            line-height: 1;
-            color: var(--amber);
-        }
-        .kpi-sub {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            margin-top: 5px;
-        }
-        .kpi-accent {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            height: 2px;
-            background: var(--amber);
-            opacity: 0.4;
-        }
-        .kpi.teal .kpi-value { color: var(--teal); }
-        .kpi.teal .kpi-accent { background: var(--teal); }
+        /* ── SUBJECT TAGS ── */
+        .subject-tags { display:flex; flex-wrap:wrap; gap:4px; }
+        .subject-tag  { font-size:0.68rem; padding:2px 7px; border-radius:4px; border:1px solid var(--border); color:var(--text-muted); background:var(--bg-raised); white-space:nowrap; }
+        .subject-tag.y1 { border-color:rgba(232,197,71,0.3); color:#c9a830; }
+        .subject-tag.y2 { border-color:rgba(62,201,167,0.3); color:#2fa888; }
+        .subject-tag.y3 { border-color:rgba(99,179,237,0.3); color:#63B3ED; }
+        .subject-tag.y4 { border-color:rgba(183,148,244,0.3); color:#B794F4; }
+        .subject-tag.y5 { border-color:rgba(252,129,74,0.3);  color:#FC814A; }
 
-        /* ── CARD ──────────────────────────────────────────── */
-        .card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 22px 24px;
-        }
-        .card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 18px;
-        }
-        .card-title {
-            font-size: 0.82rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-        }
-        .card-badge {
-            font-family: var(--mono);
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            background: var(--bg-raised);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 3px 8px;
-        }
+        /* ── EMPTY STATE ── */
+        .empty-state { padding:48px 24px; text-align:center; color:var(--text-muted); }
+        .empty-state .icon { font-size:2rem; margin-bottom:12px; opacity:0.4; }
+        .empty-state p { font-size:0.85rem; line-height:1.6; }
 
-        /* ── CHART GRID ────────────────────────────────────── */
-        .charts-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 14px;
-        }
-        .chart-wrap { position: relative; height: 200px; }
-        .interpretation-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.78rem;
-            padding: 8px 14px;
-            border-radius: 6px;
-            margin-top: 12px;
-            background: var(--bg-raised);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-        }
-        .interpretation-chip.ok     { border-color: rgba(62,201,167,0.4); background: var(--teal-dim); color: var(--teal); }
-        .interpretation-chip.warn   { border-color: rgba(232,197,71,0.4); background: var(--amber-dim); color: var(--amber); }
-        .interpretation-chip.danger { border-color: rgba(232,93,74,0.4);  background: var(--red-dim);  color: var(--red); }
+        /* ── COORD TAB ── */
+        .coord-section { margin-bottom:32px; }
+        .coord-section h3 { font-size:0.9rem; font-weight:600; color:var(--text-secondary); margin-bottom:4px; }
+        .coord-section p  { font-size:0.8rem; color:var(--text-muted); margin-bottom:16px; line-height:1.5; }
+        .semester-card { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 20px; margin-bottom:12px; }
+        .semester-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+        .semester-label { font-family:var(--mono); font-size:0.85rem; font-weight:700; color:var(--amber); }
+        .semester-subjects { display:flex; flex-wrap:wrap; gap:6px; }
+        .offered-tag { font-size:0.72rem; padding:3px 9px; border-radius:4px; background:var(--bg-raised); border:1px solid var(--border); color:var(--text-secondary); }
+        .lock-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px; }
+        .lock-screen h3 { font-size:1rem; color:var(--text-secondary); }
+        .lock-screen p  { font-size:0.85rem; color:var(--text-muted); text-align:center; max-width:320px; line-height:1.6; }
+        .pin-input { width:220px; text-align:center; font-family:var(--mono); font-size:1.1rem; letter-spacing:0.15em; }
 
-        /* ── TABLE ─────────────────────────────────────────── */
-        .table-wrap { overflow-x: auto; }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.82rem;
-        }
-        thead th {
-            padding: 10px 12px;
-            text-align: left;
-            font-family: var(--mono);
-            font-size: 0.68rem;
-            letter-spacing: 0.08em;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-        }
-        tbody td {
-            padding: 11px 12px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-secondary);
-            transition: background 0.15s;
-        }
-        tbody tr:hover td { background: var(--bg-raised); }
-        tbody tr:last-child td { border-bottom: none; }
-        .td-name {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .td-mono {
-            font-family: var(--mono);
-            font-size: 0.8rem;
-        }
-        .q-chip {
-            font-family: var(--mono);
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: 700;
-        }
-        .q-high   { background: rgba(62,201,167,0.15); color: var(--teal); }
-        .q-mid    { background: rgba(232,197,71,0.15); color: var(--amber); }
-        .q-low    { background: rgba(232,93,74,0.15);  color: var(--red); }
+        /* ── SEMESTER BUILDER ── */
+        .sem-builder { background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; margin-bottom:20px; }
+        .sem-builder-row { display:flex; gap:12px; align-items:flex-end; margin-bottom:16px; flex-wrap:wrap; }
+        .subject-check-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; max-height:320px; overflow-y:auto; }
+        .sc-item { display:flex; align-items:center; gap:8px; padding:5px 8px; border-radius:5px; cursor:pointer; }
+        .sc-item:hover { background:var(--bg-hover); }
+        .sc-item input { accent-color:var(--teal); cursor:pointer; }
+        .sc-item label { font-size:0.75rem; color:var(--text-secondary); cursor:pointer; line-height:1.3; }
+        .sc-item label .sc-year { font-family:var(--mono); font-size:0.65rem; color:var(--text-muted); display:block; }
 
-        /* ── TABLE ACTIONS ─────────────────────────────────── */
-        .table-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 18px;
-            padding-top: 18px;
-            border-top: 1px solid var(--border);
+        /* ── RESPONSIVE ── */
+        @media (max-width:1100px) {
+            .split-layout { grid-template-columns:1fr; }
+            .sidebar { border-right:none; border-bottom:1px solid var(--border); max-height:none; }
+            .charts-row { grid-template-columns:1fr 1fr; }
+            .kpi-row { grid-template-columns:1fr 1fr; }
         }
-
-        /* ── EMPTY STATE ───────────────────────────────────── */
-        .empty-state {
-            padding: 48px 24px;
-            text-align: center;
-            color: var(--text-muted);
-        }
-        .empty-state .icon {
-            font-size: 2rem;
-            margin-bottom: 12px;
-            opacity: 0.4;
-        }
-        .empty-state p { font-size: 0.85rem; line-height: 1.6; }
-
-        /* ── LOADING OVERLAY ───────────────────────────────── */
-        .skeleton-row td {
-            background: linear-gradient(90deg, var(--bg-raised) 25%, var(--bg-hover) 50%, var(--bg-raised) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.4s infinite;
-            color: transparent;
-        }
-        @keyframes shimmer { from{background-position:200% 0} to{background-position:-200% 0} }
-
-        /* ── SYNC INDICATOR ────────────────────────────────── */
-        .sync-indicator {
-            display: none;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.72rem;
-            color: var(--text-muted);
-        }
-        .sync-indicator.active { display: flex; }
-        .sync-spinner {
-            width: 10px; height: 10px;
-            border: 2px solid var(--border);
-            border-top-color: var(--amber);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ── FOOTER ────────────────────────────────────────── */
-        footer {
-            padding: 20px 32px;
-            border-top: 1px solid var(--border);
-            text-align: center;
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            letter-spacing: 0.05em;
-        }
-
-        /* ── RESPONSIVE ────────────────────────────────────── */
-        @media (max-width: 1100px) {
-            .main-layout { grid-template-columns: 1fr; }
-            .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
-            .charts-row { grid-template-columns: 1fr 1fr; }
-            .kpi-row { grid-template-columns: 1fr 1fr; }
-        }
-        @media (max-width: 640px) {
-            .header { padding: 14px 16px; }
-            .header-brand span { display: none; }
-            .main-content { padding: 20px 16px; }
-            .charts-row { grid-template-columns: 1fr; }
-            .kpi-row { grid-template-columns: 1fr 1fr; }
+        @media (max-width:640px) {
+            .header { padding:14px 16px; }
+            .header-brand span { display:none; }
+            .tabs { padding:0 16px; }
+            .main-content { padding:20px 16px; }
+            .charts-row { grid-template-columns:1fr; }
+            .kpi-row { grid-template-columns:1fr 1fr; }
+            .subject-check-grid { grid-template-columns:1fr; }
         }
     </style>
 </head>
 <body>
-
-<!-- ── TOAST CONTAINER ───────────────────────────────── -->
 <div id="toast-container"></div>
 
-<!-- ── MODAL CONFIRM ─────────────────────────────────── -->
+<!-- MODAL CONFIRMAR -->
 <div class="modal-overlay" id="confirmModal">
-    <div class="modal">
-        <h3 id="modalTitle">¿Eliminar todos los registros?</h3>
-        <p id="modalDesc">Esta acción borrará permanentemente todos los datos de la base de datos compartida. No se puede deshacer.</p>
+    <div class="modal modal-sm">
+        <h3 id="modalTitle">¿Confirmar acción?</h3>
+        <p id="modalDesc"></p>
         <div class="modal-actions">
-            <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-            <button class="btn btn-danger" id="modalConfirmBtn" onclick="confirmAction()">Eliminar todo</button>
+            <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancelar</button>
+            <button class="btn btn-danger" id="modalConfirmBtn" onclick="confirmAction()">Confirmar</button>
         </div>
     </div>
 </div>
 
-<!-- ── HEADER ─────────────────────────────────────────── -->
+<!-- MODAL VER MATERIAS ALUMNO -->
+<div class="modal-overlay" id="studentDetailModal">
+    <div class="modal modal-lg">
+        <h3 id="detailName">—</h3>
+        <p id="detailSummary" style="margin-bottom:16px;"></p>
+        <div id="detailSubjects" class="subject-tags" style="gap:6px;"></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal('studentDetailModal')">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- HEADER -->
 <header class="header">
     <div class="header-brand">
         <h1>Resonancia Curricular</h1>
         <span>UNTREF · Ingeniería de Sonido</span>
     </div>
-    <div style="display:flex;align-items:center;gap:12px;">
+    <div class="header-right">
         <div class="sync-indicator" id="syncIndicator">
             <div class="sync-spinner"></div>
-            <span>Sincronizando…</span>
+            <span>Guardando…</span>
         </div>
         <div class="db-pill loading" id="dbPill">
             <div class="dot"></div>
@@ -590,110 +285,105 @@
     </div>
 </header>
 
-<!-- ── MAIN LAYOUT ────────────────────────────────────── -->
-<div class="main-layout">
+<!-- TABS -->
+<nav class="tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-student')">Mi avance</button>
+    <button class="tab-btn" onclick="switchTab('tab-analysis')">Análisis grupal</button>
+    <button class="tab-btn" onclick="switchTab('tab-coord')">Coordinación</button>
+</nav>
 
-    <!-- ── SIDEBAR ──────────────────────────────────── -->
+<!-- ════════════════════════════════════════════
+     TAB 1: ALUMNO — carga sus materias
+════════════════════════════════════════════ -->
+<div class="tab-pane active" id="tab-student">
+  <div class="split-layout">
+
+    <!-- SIDEBAR ALUMNO -->
     <aside class="sidebar">
-
         <div>
-            <p class="sidebar-section-label">Cargar alumno</p>
-
+            <p class="section-label">Tu información</p>
             <div class="form-field">
-                <label for="studentName">Nombre del alumno</label>
+                <label for="studentName">Tu nombre</label>
                 <input type="text" class="input-text" id="studentName" placeholder="Ej: Valentín García" autocomplete="off">
             </div>
-
-            <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">
-                Materias aprobadas por año
-            </p>
-
-            <div class="year-grid">
-                <div class="year-cell">
-                    <label>A1</label>
-                    <input type="number" class="input-num" id="y1" value="10" min="0" max="15" oninput="updateSignalPreview()">
-                    <span class="year-max">/ 15</span>
-                </div>
-                <div class="year-cell">
-                    <label>A2</label>
-                    <input type="number" class="input-num" id="y2" value="5" min="0" max="8" oninput="updateSignalPreview()">
-                    <span class="year-max">/ 8</span>
-                </div>
-                <div class="year-cell">
-                    <label>A3</label>
-                    <input type="number" class="input-num" id="y3" value="3" min="0" max="7" oninput="updateSignalPreview()">
-                    <span class="year-max">/ 7</span>
-                </div>
-                <div class="year-cell">
-                    <label>A4</label>
-                    <input type="number" class="input-num" id="y4" value="1" min="0" max="7" oninput="updateSignalPreview()">
-                    <span class="year-max">/ 7</span>
-                </div>
-                <div class="year-cell">
-                    <label>A5</label>
-                    <input type="number" class="input-num" id="y5" value="0" min="0" max="7" oninput="updateSignalPreview()">
-                    <span class="year-max">/ 7</span>
-                </div>
-            </div>
-
-            <!-- Firma única: mini previsualización de la señal -->
-            <div class="signal-preview" title="Perfil de avance curricular">
-                <svg id="signalSvg" viewBox="0 0 300 40" preserveAspectRatio="none">
-                    <polyline id="signalLine"
-                        points=""
-                        fill="none"
-                        stroke="#E8C547"
-                        stroke-width="2"
-                        stroke-linejoin="round"/>
-                    <polyline id="signalIdeal"
-                        points=""
-                        fill="none"
-                        stroke="#3EC9A7"
-                        stroke-width="1.5"
-                        stroke-dasharray="4 3"
-                        stroke-linejoin="round"
-                        opacity="0.5"/>
-                </svg>
-            </div>
-            <p style="font-size:0.63rem;color:var(--text-muted);text-align:right;margin-top:-12px;margin-bottom:16px;">
-                <span style="color:var(--amber);">▬</span> Ingresado &nbsp;
-                <span style="color:var(--teal);">╌</span> Ideal
-            </p>
-
-            <button class="btn btn-primary btn-full" onclick="addStudent()">
-                Guardar alumno
-            </button>
         </div>
 
         <div class="divider"></div>
 
-        <div>
-            <p class="sidebar-section-label">Acciones de datos</p>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-                <button class="btn btn-ghost btn-full" onclick="generateRandomData()">
-                    Generar datos de prueba (10)
-                </button>
-                <button class="btn btn-ghost btn-full" onclick="exportCSV()">
-                    Exportar CSV
-                </button>
+        <div style="flex:1; overflow-y:auto;">
+            <p class="section-label">Materias aprobadas</p>
+            <div class="progress-summary">
+                <div class="progress-label">Avance total <span id="progPct">0%</span></div>
+                <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+                <div class="progress-years" id="progYears"></div>
             </div>
+
+            <div id="subjectSelector"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Mini señal -->
+        <div>
+            <div class="signal-preview">
+                <svg id="signalSvg" viewBox="0 0 300 40" preserveAspectRatio="none">
+                    <polyline id="signalLine"  points="" fill="none" stroke="#E8C547" stroke-width="2" stroke-linejoin="round"/>
+                    <polyline id="signalIdeal" points="" fill="none" stroke="#3EC9A7" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" opacity="0.5"/>
+                </svg>
+            </div>
+            <div class="signal-legend">
+                <span style="color:var(--amber);">▬</span> Tu avance &nbsp;
+                <span style="color:var(--teal);">╌</span> Plan ideal
+            </div>
+            <button class="btn btn-primary btn-full" onclick="saveStudent()">Guardar mis datos</button>
         </div>
 
         <div class="sidebar-footer">
-            <p class="student-count-label">
-                <strong id="studentCount">0</strong> alumnos registrados
+            <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">
+                <strong id="studentCount" style="font-family:var(--mono);color:var(--text-secondary);">0</strong> alumnos en la base
             </p>
-            <button class="btn btn-danger-ghost btn-full" onclick="askClearAll()">
-                Borrar todos los datos
-            </button>
+            <button class="btn btn-ghost btn-full" onclick="exportCSV()">Exportar CSV</button>
         </div>
-
     </aside>
 
-    <!-- ── MAIN CONTENT ──────────────────────────────── -->
+    <!-- MAIN ALUMNO: tabla de alumnos -->
     <main class="main-content">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Registro de alumnos</span>
+                <span class="card-badge" id="tableBadge">Base compartida</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alumno</th>
+                            <th>Aprobadas</th>
+                            <th>%</th>
+                            <th>Q</th>
+                            <th>KL div.</th>
+                            <th>Materias</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="7">
+                            <div class="empty-state"><div class="icon">📡</div><p>Conectando…</p></div>
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+  </div>
+</div>
 
-        <!-- KPIs -->
+<!-- ════════════════════════════════════════════
+     TAB 2: ANÁLISIS GRUPAL
+════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-analysis">
+  <div class="main-content" style="display:flex;flex-direction:column;gap:24px;padding:28px 32px;">
+
         <div class="kpi-row">
             <div class="kpi">
                 <div class="kpi-label">Media Q</div>
@@ -716,588 +406,777 @@
             <div class="kpi teal">
                 <div class="kpi-label">Avance promedio</div>
                 <div class="kpi-value" id="kpiAvgPct">—</div>
-                <div class="kpi-sub">% respecto al plan ideal</div>
+                <div class="kpi-sub">% respecto al plan</div>
                 <div class="kpi-accent"></div>
             </div>
         </div>
 
-        <!-- CHARTS ROW -->
         <div class="charts-row">
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Distribución de Q</span>
-                    <span class="card-badge" id="normalBadge">Normal</span>
+                    <span class="card-badge">Normal</span>
                 </div>
-                <div class="chart-wrap">
-                    <canvas id="normalChart"></canvas>
-                </div>
-                <div class="interpretation-chip" id="qInterpretation">
-                    Cargá alumnos para ver la distribución.
-                </div>
+                <div class="chart-wrap"><canvas id="normalChart"></canvas></div>
+                <div class="interpretation-chip" id="qInterpretation">Cargá alumnos para ver la distribución.</div>
             </div>
-
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Q por alumno</span>
                     <span class="card-badge">Factor Q</span>
                 </div>
-                <div class="chart-wrap">
-                    <canvas id="qBarChart"></canvas>
-                </div>
-                <p style="font-size:0.7rem;color:var(--text-muted);margin-top:10px;">
-                    Q&gt;5 óptimo · Q 3–5 aceptable · Q&lt;3 irregular
-                </p>
+                <div class="chart-wrap"><canvas id="qBarChart"></canvas></div>
+                <p style="font-size:0.7rem;color:var(--text-muted);margin-top:10px;">Q&gt;5 óptimo · Q 3–5 aceptable · Q&lt;3 irregular</p>
             </div>
-
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Oferta vs Demanda</span>
-                    <span class="card-badge">Por año</span>
+                    <span class="card-title">Demanda por año</span>
+                    <span class="card-badge">Promedio grupal</span>
                 </div>
-                <div class="chart-wrap">
-                    <canvas id="optimizationChart"></canvas>
-                </div>
+                <div class="chart-wrap"><canvas id="demandChart"></canvas></div>
                 <p style="font-size:0.7rem;color:var(--text-muted);margin-top:10px;">
-                    <span style="color:var(--amber);">■</span> Ideal &nbsp;
-                    <span style="color:var(--teal);">■</span> Real (promedio)
+                    <span style="color:var(--amber);">■</span> Plan ideal &nbsp;
+                    <span style="color:var(--teal);">■</span> Aprobadas promedio
                 </p>
             </div>
         </div>
 
-        <!-- TABLE -->
+        <!-- Ranking de materias más aprobadas -->
         <div class="card">
             <div class="card-header">
-                <span class="card-title">Registro de alumnos</span>
-                <span class="card-badge" id="tableBadge">Base compartida</span>
+                <span class="card-title">Materias más aprobadas</span>
+                <span class="card-badge">Frecuencia grupal</span>
             </div>
+            <div class="chart-wrap" style="height:260px;"><canvas id="subjectFreqChart"></canvas></div>
+        </div>
 
-            <div class="table-wrap" id="tableWrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Alumno</th>
-                            <th>A1</th><th>A2</th><th>A3</th><th>A4</th><th>A5</th>
-                            <th>Total</th>
-                            <th>%</th>
-                            <th>Q</th>
-                            <th>KL div.</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <tr><td colspan="11">
-                            <div class="empty-state">
-                                <div class="icon">📡</div>
-                                <p>Conectando a la base de datos…</p>
-                            </div>
-                        </td></tr>
-                    </tbody>
-                </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     TAB 3: COORDINACIÓN
+════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-coord">
+  <div class="main-content" style="padding:28px 32px;">
+
+    <!-- Pantalla de lock -->
+    <div class="lock-screen" id="lockScreen">
+        <div style="font-size:2.5rem;opacity:0.3;">🔒</div>
+        <h3>Acceso de coordinación</h3>
+        <p>Esta sección es para cargar la oferta cuatrimestral. Ingresá la contraseña para continuar.</p>
+        <input type="password" class="input-text pin-input" id="coordPin" placeholder="Contraseña" autocomplete="off">
+        <button class="btn btn-primary" onclick="unlockCoord()">Ingresar</button>
+        <p id="lockError" style="color:var(--red);font-size:0.8rem;display:none;">Contraseña incorrecta.</p>
+    </div>
+
+    <!-- Panel de coordinación (oculto hasta unlock) -->
+    <div id="coordPanel" style="display:none;">
+
+        <div class="coord-section">
+            <h3>Cargar oferta cuatrimestral</h3>
+            <p>Seleccioná las materias que se abren este cuatrimestre. Se guardan en la base de datos compartida.</p>
+
+            <div class="sem-builder">
+                <div class="sem-builder-row">
+                    <div class="form-field" style="margin:0;">
+                        <label>Cuatrimestre</label>
+                        <input type="text" class="input-text" id="semLabel" placeholder="Ej: 2025-C1" style="width:160px;">
+                    </div>
+                    <button class="btn btn-teal" onclick="saveSemester()">Guardar oferta</button>
+                </div>
+                <p class="section-label" style="margin-bottom:10px;">Materias ofrecidas</p>
+                <div class="subject-check-grid" id="semSubjectGrid"></div>
             </div>
         </div>
 
-    </main>
+        <div class="coord-section">
+            <h3>Cuatrimestres cargados</h3>
+            <p>Historial de ofertas cuatrimestrales guardadas.</p>
+            <div id="semesterList">
+                <div class="empty-state"><div class="icon">📅</div><p>No hay cuatrimestres cargados todavía.</p></div>
+            </div>
+        </div>
+
+        <div class="coord-section">
+            <h3>Gestión de datos</h3>
+            <p>Acciones administrativas sobre la base de datos.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-ghost" onclick="generateRandomData()">Generar datos de prueba (10 alumnos)</button>
+                <button class="btn btn-danger-ghost" onclick="askClearAll()">Borrar todos los alumnos</button>
+            </div>
+        </div>
+
+    </div>
+  </div>
 </div>
 
-<!-- ── FOOTER ─────────────────────────────────────────── -->
-<footer>
+<footer style="padding:18px 32px;border-top:1px solid var(--border);text-align:center;font-size:0.72rem;color:var(--text-muted);letter-spacing:0.05em;">
     UNTREF · Ingeniería de Sonido · Procesamiento de Señales aplicado a la gestión académica
 </footer>
 
-<!-- ── SCRIPTS ────────────────────────────────────────── -->
 <script>
 // ================================================================
-//  CONFIGURACIÓN
+//  CATÁLOGO DE MATERIAS
 // ================================================================
-const IDEAL       = [15, 8, 7, 7, 7];
-const IDEAL_MAXS  = [15, 8, 7, 7, 7];
-const TOTAL_IDEAL = IDEAL.reduce((a, b) => a + b, 0);
-const API_URL     = '/api/students';
+const CATALOG = [
+  {id:"computacion",           name:"Computación",                                       year:1, sem:1},
+  {id:"fisica_i",              name:"Física I",                                          year:1, sem:1},
+  {id:"analisis_mat_i",        name:"Análisis Matemático I",                             year:1, sem:1},
+  {id:"ingles_basico",         name:"Inglés Básico",                                     year:1, sem:1},
+  {id:"algebra_i",             name:"Álgebra I",                                         year:1, sem:1},
+  {id:"historia_sxx",          name:"Problemas de Historia del Siglo XX",                year:1, sem:1},
+  {id:"intro_acustica",        name:"Introducción a la Acústica y Psicoacústica",        year:1, sem:1},
+  {id:"fisica_ii",             name:"Física II",                                         year:1, sem:2},
+  {id:"analisis_mat_ii",       name:"Análisis Matemático II",                            year:1, sem:2},
+  {id:"grabacion_i",           name:"Grabación I",                                       year:1, sem:2},
+  {id:"ingles_tecnico",        name:"Inglés Técnico",                                    year:1, sem:2},
+  {id:"algebra_ii",            name:"Álgebra II",                                        year:1, sem:2},
+  {id:"cultura_contemporanea", name:"Cultura Contemporánea",                             year:1, sem:2},
+  {id:"sociologia",            name:"Cuestiones de Sociología, Economía y Política",     year:1, sem:2},
+  {id:"taller_mundo",          name:"Taller Problemática del Mundo Contemporáneo",       year:1, sem:2},
+  {id:"analisis_mat_iii",      name:"Análisis Matemático III",                           year:2, sem:1},
+  {id:"electricidad",          name:"Electricidad y Magnetismo",                         year:2, sem:1},
+  {id:"dibujo_tecnico",        name:"Dibujo Técnico Asistido por Computadora",           year:2, sem:1},
+  {id:"acustica_i",            name:"Acústica y Psicoacústica I",                        year:2, sem:1},
+  {id:"probabilidad",          name:"Probabilidad y Estadística",                        year:2, sem:2},
+  {id:"lab_electronica_i",     name:"Laboratorio de Electrónica I",                      year:2, sem:2},
+  {id:"senales_sistemas",      name:"Señales y Sistemas",                                year:2, sem:2},
+  {id:"grabacion_ii",          name:"Grabación II",                                      year:2, sem:2},
+  {id:"administracion",        name:"Administración Estratégica de Empresas",            year:3, sem:1},
+  {id:"lab_electronica_ii",    name:"Laboratorio de Electrónica II",                     year:3, sem:1},
+  {id:"acustica_ii",           name:"Acústica y Psicoacústica II",                       year:3, sem:1},
+  {id:"proc_digital",          name:"Procesamiento Digital de Señales",                  year:3, sem:2},
+  {id:"circuitos_i",           name:"Circuitos Electrónicos I",                          year:3, sem:2},
+  {id:"electroacustica_i",     name:"Electroacústica I",                                 year:3, sem:2},
+  {id:"grabacion_iii",         name:"Grabación III",                                     year:3, sem:2},
+  {id:"legislacion",           name:"Legislación y Recursos Humanos",                    year:4, sem:1},
+  {id:"electroacustica_ii",    name:"Electroacústica II",                                year:4, sem:1},
+  {id:"comunicaciones",        name:"Comunicaciones",                                    year:4, sem:1},
+  {id:"mediciones_acusticas",  name:"Instrumentos y Mediciones Acústicas",               year:4, sem:2},
+  {id:"mastering",             name:"Mastering y Postproducción de Sonido",              year:4, sem:2},
+  {id:"circuitos_ii",          name:"Circuitos Electrónicos II",                         year:4, sem:2},
+  {id:"audio_digital",         name:"Audio Digital",                                     year:4, sem:2},
+  {id:"metodologia",           name:"Metodología de la Investigación Científica",        year:5, sem:1},
+  {id:"lab_acustica",          name:"Laboratorio de Acústica",                           year:5, sem:1},
+  {id:"ruido_acustico",        name:"Ruido Acústico",                                    year:5, sem:1},
+  {id:"sonido_vivo",           name:"Sonido en Vivo",                                    year:5, sem:1},
+  {id:"practica_profesional",  name:"Práctica Profesional",                              year:5, sem:2},
+  {id:"mediciones_electronicas",name:"Instrumentos de Mediciones Electrónicas",          year:5, sem:2},
+  {id:"tesis",                 name:"Trabajo de Tesis",                                  year:5, sem:2},
+];
 
-let students = [];
-let chartNormal, chartQ, chartOpt;
+const YEAR_TOTALS = [1,2,3,4,5].map(y => CATALOG.filter(s=>s.year===y).length); // [15,8,7,7,7]
+const TOTAL_IDEAL = YEAR_TOTALS.reduce((a,b)=>a+b,0); // 44
+const IDEAL = YEAR_TOTALS;
+const YEAR_COLORS = ['#c9a830','#2fa888','#63B3ED','#B794F4','#FC814A'];
+
+// ================================================================
+//  ESTADO GLOBAL
+// ================================================================
+const API = '/api';
+let students  = [];   // [{name, approved:[{id,name,year}]}]
+let semesters = [];   // [{label, offered:[{id,name,year}]}]
+let selectedIds = new Set();  // IDs seleccionados en el formulario del alumno
+let coordUnlocked = false;
 let pendingAction = null;
 
 // ================================================================
-//  TOAST SYSTEM
+//  UTILIDADES
 // ================================================================
-function toast(msg, type = 'info', duration = 3500) {
-    const container = document.getElementById('toast-container');
+function toast(msg, type='info', ms=3500) {
+    const c = document.getElementById('toast-container');
     const el = document.createElement('div');
     el.className = `toast ${type}`;
-    const icons = { success: '✓', error: '✕', info: '·' };
-    el.innerHTML = `<span style="font-size:1rem;opacity:0.8">${icons[type]||'·'}</span><span>${msg}</span>`;
-    container.appendChild(el);
-    setTimeout(() => {
-        el.classList.add('out');
-        setTimeout(() => el.remove(), 280);
-    }, duration);
+    el.innerHTML = `<span style="opacity:.7">${{success:'✓',error:'✕',info:'·'}[type]||'·'}</span><span>${msg}</span>`;
+    c.appendChild(el);
+    setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(),280); }, ms);
 }
 
-// ================================================================
-//  MODAL SYSTEM
-// ================================================================
-function showModal(title, desc, confirmLabel, action) {
+function setDbStatus(s) {
+    const p = document.getElementById('dbPill'), t = document.getElementById('dbPillText');
+    p.className = 'db-pill' + (s==='ok'?' ok':s==='error'?' error':' loading');
+    t.textContent = s==='ok'?'Conectado':s==='error'?'Sin conexión':'Conectando';
+}
+function setSyncing(on) { document.getElementById('syncIndicator').classList.toggle('active',on); }
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function showConfirm(title, desc, label, fn) {
     document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalDesc').textContent = desc;
-    document.getElementById('modalConfirmBtn').textContent = confirmLabel;
-    pendingAction = action;
-    document.getElementById('confirmModal').classList.add('active');
+    document.getElementById('modalDesc').textContent  = desc;
+    document.getElementById('modalConfirmBtn').textContent = label;
+    pendingAction = fn;
+    openModal('confirmModal');
 }
-function closeModal() {
-    document.getElementById('confirmModal').classList.remove('active');
-    pendingAction = null;
-}
-function confirmAction() {
-    closeModal();
-    if (pendingAction) pendingAction();
-}
-document.getElementById('confirmModal').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) closeModal();
-});
+function confirmAction() { closeModal('confirmModal'); if(pendingAction) pendingAction(); }
 
-// ================================================================
-//  DB STATUS
-// ================================================================
-function setDbStatus(state) {
-    const pill = document.getElementById('dbPill');
-    const text = document.getElementById('dbPillText');
-    pill.className = 'db-pill';
-    if (state === 'ok')      { pill.classList.add('ok');    text.textContent = 'Conectado'; }
-    if (state === 'error')   { pill.classList.add('error'); text.textContent = 'Sin conexión'; }
-    if (state === 'loading') { pill.classList.add('loading'); text.textContent = 'Conectando'; }
-}
-function setSyncVisible(on) {
-    document.getElementById('syncIndicator').classList.toggle('active', on);
+function switchTab(id) {
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const idx = ['tab-student','tab-analysis','tab-coord'].indexOf(id);
+    document.querySelectorAll('.tab-btn')[idx].classList.add('active');
 }
 
 // ================================================================
 //  API
 // ================================================================
-async function loadFromAPI() {
+async function fetchStudents() {
     setDbStatus('loading');
     try {
-        const res = await fetch(API_URL);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        students = data.students || [];
+        const r = await fetch(`${API}/students`);
+        if(!r.ok) throw new Error(r.status);
+        const d = await r.json();
+        students = d.students || [];
         setDbStatus('ok');
-        updateAll();
-    } catch (err) {
-        console.error('Load error:', err);
+    } catch(e) {
         setDbStatus('error');
-        renderEmptyState('No se pudo conectar con la base de datos. Reintentando en 5 s…');
-        setTimeout(loadFromAPI, 5000);
+        toast('No se pudo conectar con la base de datos.','error');
     }
 }
 
-async function saveToAPI() {
-    setSyncVisible(true);
+async function fetchSemesters() {
     try {
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ students })
+        const r = await fetch(`${API}/semesters`);
+        if(!r.ok) return;
+        const d = await r.json();
+        semesters = d.semesters || [];
+    } catch {}
+}
+
+async function pushStudents() {
+    setSyncing(true);
+    try {
+        const r = await fetch(`${API}/students`,{
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({students})
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        await loadFromAPI();
-        toast('Datos guardados', 'success');
-    } catch (err) {
-        console.error('Save error:', err);
-        toast('Error al guardar. Revisá la conexión.', 'error');
-    } finally {
-        setSyncVisible(false);
-    }
+        if(!r.ok) throw new Error(r.status);
+        toast('Datos guardados','success');
+    } catch {
+        toast('Error al guardar. Revisá la conexión.','error');
+    } finally { setSyncing(false); }
 }
 
-async function deleteAllInAPI() {
-    setSyncVisible(true);
+async function pushSemesters() {
+    setSyncing(true);
     try {
-        const res = await fetch(API_URL, { method: 'DELETE' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        await loadFromAPI();
-        toast('Todos los registros eliminados', 'success');
-    } catch (err) {
-        console.error('Delete error:', err);
-        toast('Error al borrar los datos.', 'error');
-    } finally {
-        setSyncVisible(false);
+        const r = await fetch(`${API}/semesters`,{
+            method:'POST', headers:{'Content-Type':'application/json',
+            'Authorization':'Basic '+btoa('coord:'+document.getElementById('coordPin').value)},
+            body: JSON.stringify({semesters})
+        });
+        if(!r.ok) throw new Error(r.status);
+        toast('Oferta guardada','success');
+    } catch {
+        toast('Error al guardar la oferta.','error');
+    } finally { setSyncing(false); }
+}
+
+// ================================================================
+//  SELECTOR DE MATERIAS (sidebar alumno)
+// ================================================================
+function buildSubjectSelector() {
+    const container = document.getElementById('subjectSelector');
+    container.innerHTML = '';
+    for(let y=1;y<=5;y++) {
+        const subjects = CATALOG.filter(s=>s.year===y);
+        const approvedInYear = subjects.filter(s=>selectedIds.has(s.id)).length;
+        const div = document.createElement('div');
+        div.className = 'subject-year-group';
+        div.innerHTML = `
+            <div class="year-group-header" onclick="toggleYearGroup(${y})">
+                <span class="year-group-title">Año ${y}</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <span class="year-group-count" id="ycount-${y}">${approvedInYear}/${subjects.length}</span>
+                    <span class="year-group-chevron" id="ychev-${y}">▶</span>
+                </div>
+            </div>
+            <div class="subject-list" id="ylist-${y}">
+                ${subjects.map(s=>`
+                    <div class="subject-item ${selectedIds.has(s.id)?'checked':''}" onclick="toggleSubject('${s.id}',this)">
+                        <input type="checkbox" id="cb-${s.id}" ${selectedIds.has(s.id)?'checked':''}>
+                        <label for="cb-${s.id}">${s.name}</label>
+                    </div>
+                `).join('')}
+            </div>`;
+        container.appendChild(div);
+    }
+    updateProgressBar();
+    updateSignalPreview();
+}
+
+function toggleYearGroup(y) {
+    const list = document.getElementById(`ylist-${y}`);
+    const chev = document.getElementById(`ychev-${y}`);
+    list.classList.toggle('open');
+    chev.classList.toggle('open');
+}
+
+function toggleSubject(id, el) {
+    const cb = el.querySelector('input[type=checkbox]') || document.getElementById(`cb-${id}`);
+    if(selectedIds.has(id)) {
+        selectedIds.delete(id);
+        el.classList.remove('checked');
+        if(cb) cb.checked = false;
+    } else {
+        selectedIds.add(id);
+        el.classList.add('checked');
+        if(cb) cb.checked = true;
+    }
+    // Actualizar contador del año
+    const s = CATALOG.find(s=>s.id===id);
+    if(s) {
+        const inYear = CATALOG.filter(c=>c.year===s.year);
+        const count  = inYear.filter(c=>selectedIds.has(c.id)).length;
+        const el2 = document.getElementById(`ycount-${s.year}`);
+        if(el2) el2.textContent = `${count}/${inYear.length}`;
+    }
+    updateProgressBar();
+    updateSignalPreview();
+}
+
+function updateProgressBar() {
+    const total = selectedIds.size;
+    const pct   = Math.round(total/TOTAL_IDEAL*100);
+    document.getElementById('progPct').textContent  = pct+'%';
+    document.getElementById('progFill').style.width = pct+'%';
+    // Mini barras por año
+    const py = document.getElementById('progYears');
+    py.innerHTML = '';
+    for(let y=1;y<=5;y++){
+        const inYear = CATALOG.filter(s=>s.year===y);
+        const done   = inYear.filter(s=>selectedIds.has(s.id)).length;
+        const pctY   = Math.round(done/inYear.length*100);
+        py.innerHTML += `
+            <div class="year-pip">
+                <div class="year-pip-bar">
+                    <div class="year-pip-fill" style="height:${pctY}%;background:${YEAR_COLORS[y-1]};"></div>
+                </div>
+                <div class="year-pip-label">A${y}</div>
+            </div>`;
     }
 }
 
 // ================================================================
-//  SIGNAL PREVIEW (firma única del diseño)
+//  MINI SEÑAL
 // ================================================================
 function updateSignalPreview() {
-    const vals = getYearValues();
-    const maxs = IDEAL_MAXS;
-    const W = 300, H = 40, pad = 8;
-    const usable = W - pad * 2;
-    const seg = usable / 4;
-
-    function toPoints(arr) {
-        return arr.map((v, i) => {
-            const x = pad + i * seg;
-            const norm = maxs[i] > 0 ? v / maxs[i] : 0;
-            const y = H - pad - norm * (H - pad * 2);
-            return `${x},${y}`;
-        }).join(' ');
-    }
-    function idealPoints() {
-        return IDEAL.map((v, i) => {
-            const x = pad + i * seg;
-            const norm = maxs[i] > 0 ? v / maxs[i] : 0;
-            const y = H - pad - norm * (H - pad * 2);
-            return `${x},${y}`;
-        }).join(' ');
-    }
-
-    document.getElementById('signalLine').setAttribute('points', toPoints(vals));
-    document.getElementById('signalIdeal').setAttribute('points', idealPoints());
-}
-
-function getYearValues() {
-    return [1,2,3,4,5].map(i => {
-        const v = parseInt(document.getElementById(`y${i}`).value) || 0;
-        return Math.min(v, IDEAL_MAXS[i-1]);
+    const vals  = IDEAL.map((_,i)=>{
+        const inYear = CATALOG.filter(s=>s.year===i+1);
+        return inYear.filter(s=>selectedIds.has(s.id)).length;
     });
+    const W=300, H=40, pad=8, usable=W-pad*2, seg=usable/4;
+    const pts = (arr,maxArr) => arr.map((v,i)=>{
+        const x=pad+i*seg, norm=maxArr[i]>0?v/maxArr[i]:0;
+        return `${x},${H-pad-norm*(H-pad*2)}`;
+    }).join(' ');
+    document.getElementById('signalLine').setAttribute('points',  pts(vals,IDEAL));
+    document.getElementById('signalIdeal').setAttribute('points', pts(IDEAL,IDEAL));
 }
 
 // ================================================================
-//  CÁLCULOS
+//  GUARDAR ALUMNO
 // ================================================================
-function buildSignal(data, sps = 20) {
-    const total = 5 * sps;
-    const sig = new Array(total).fill(0);
-    for (let i = 0; i < 5; i++) {
-        const start = i * sps;
-        const end = (i === 4) ? total : (i + 1) * sps;
-        for (let j = start; j < end; j++) sig[j] = data[i] || 0;
-    }
-    return sig;
-}
-
-function computeMetrics(data) {
-    const sig = buildSignal(data);
-    const idealSig = buildSignal(IDEAL);
-    let sumSq = 0;
-    for (let i = 0; i < sig.length; i++) sumSq += (sig[i] - idealSig[i]) ** 2;
-    const rms = Math.sqrt(sumSq / sig.length);
-
-    const N = sig.length;
-    const real = new Array(N).fill(0);
-    const imag = new Array(N).fill(0);
-    for (let k = 0; k < N / 2; k++) {
-        let sumR = 0, sumI = 0;
-        for (let n = 0; n < N; n++) {
-            const angle = (2 * Math.PI * k * n) / N;
-            sumR += sig[n] * Math.cos(angle);
-            sumI -= sig[n] * Math.sin(angle);
-        }
-        real[k] = sumR; imag[k] = sumI;
-    }
-    const mags = [], freqs = [];
-    for (let k = 0; k < N / 2; k++) {
-        mags.push(Math.sqrt(real[k] ** 2 + imag[k] ** 2));
-        freqs.push(k / 5);
-    }
-    const energies = mags.map(m => m * m);
-    const totalEnergy = energies.reduce((a, b) => a + b, 0);
-    let cumEnergy = 0, cutIdx = energies.length - 1;
-    for (let i = 0; i < energies.length; i++) {
-        cumEnergy += energies[i];
-        if (cumEnergy >= totalEnergy * 0.5) { cutIdx = i; break; }
-    }
-    const f_corte = freqs[cutIdx] || 0.1;
-    const bw = 2 * f_corte;
-    const q = (bw === 0) ? Infinity : (1 / bw);
-
-    const totalData = data.reduce((a, b) => a + b, 0);
-    const p_ideal = IDEAL.map(v => v / TOTAL_IDEAL);
-    const p_data  = data.map(v => (totalData === 0) ? 0.2 : v / totalData);
-    let kl = 0;
-    for (let i = 0; i < p_ideal.length; i++) {
-        if (p_ideal[i] > 0 && p_data[i] > 0) kl += p_ideal[i] * Math.log(p_ideal[i] / p_data[i]);
-        else if (p_ideal[i] > 0 && p_data[i] === 0) kl += 100;
-    }
-    const total   = totalData;
-    const percent = (total / TOTAL_IDEAL) * 100;
-    return { total, percent, rms, q, kl, f_corte, data };
-}
-
-// ================================================================
-//  UI ACTIONS
-// ================================================================
-async function addStudent() {
+async function saveStudent() {
     const name = document.getElementById('studentName').value.trim();
-    if (!name) { toast('Ingresá el nombre del alumno.', 'error'); return; }
-    const data = getYearValues();
-    const idx = students.findIndex(s => s.name === name);
-    if (idx !== -1) {
-        students[idx].data = data;
-        toast(`Registro de ${name} actualizado`, 'info');
-    } else {
-        students.push({ name, data });
-        toast(`${name} agregado`, 'info');
-    }
-    await saveToAPI();
-}
-
-async function deleteStudent(name) {
-    students = students.filter(s => s.name !== name);
-    await saveToAPI();
-    toast(`${name} eliminado`, 'info');
-}
-
-function askClearAll() {
-    showModal(
-        '¿Eliminar todos los registros?',
-        'Esta acción borrará permanentemente todos los datos de la base de datos compartida. No se puede deshacer.',
-        'Eliminar todo',
-        deleteAllInAPI
-    );
-}
-
-async function generateRandomData() {
-    const names = ["Martín","Lucía","Carlos","Ana","Jorge","Micaela","Diego","Sofía","Luis","Cecilia"];
-    students = names.map(name => ({
-        name,
-        data: [
-            Math.min(15, Math.floor(Math.random()*10)+5),
-            Math.min(8,  Math.floor(Math.random()*6)+1),
-            Math.min(7,  Math.floor(Math.random()*5)),
-            Math.min(7,  Math.floor(Math.random()*4)),
-            Math.min(7,  Math.floor(Math.random()*3))
-        ]
-    }));
-    await saveToAPI();
-    toast('10 alumnos de prueba generados', 'success');
-}
-
-function exportCSV() {
-    if (students.length === 0) { toast('No hay datos para exportar.', 'error'); return; }
-    let csv = "Nombre,Año1,Año2,Año3,Año4,Año5,Total,Q,KL\n";
-    students.forEach(s => {
-        const m = computeMetrics(s.data);
-        csv += `${s.name},${s.data.join(',')},${m.total},${m.q.toFixed(3)},${m.kl.toFixed(3)}\n`;
-    });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
-    a.download = 'resonancia_curricular.csv';
-    a.click();
-    toast('CSV exportado', 'success');
+    if(!name){ toast('Ingresá tu nombre primero.','error'); return; }
+    const approved = CATALOG.filter(s=>selectedIds.has(s.id))
+                            .map(({id,name,year})=>({id,name,year}));
+    const idx = students.findIndex(s=>s.name===name);
+    if(idx!==-1) students[idx].approved = approved;
+    else students.push({name, approved});
+    await pushStudents();
+    await fetchStudents();
+    renderAll();
 }
 
 // ================================================================
-//  RENDER
+//  TABLA DE ALUMNOS
 // ================================================================
-function renderEmptyState(msg) {
-    document.getElementById('tableBody').innerHTML = `
-        <tr><td colspan="11">
-            <div class="empty-state">
-                <div class="icon">📡</div>
-                <p>${msg}</p>
-            </div>
-        </td></tr>`;
-}
-
 function renderTable() {
     const tbody = document.getElementById('tableBody');
-    if (students.length === 0) {
-        tbody.innerHTML = `
-            <tr><td colspan="11">
-                <div class="empty-state">
-                    <div class="icon">📋</div>
-                    <p>Todavía no hay alumnos registrados.<br>Usá el formulario de la izquierda para agregar el primero.</p>
-                </div>
-            </td></tr>`;
+    document.getElementById('studentCount').textContent = students.length;
+    if(!students.length){
+        tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="icon">📋</div><p>Aún no hay alumnos.<br>Completá tus materias y guardá.</p></div></td></tr>`;
         return;
     }
     tbody.innerHTML = '';
-    students.forEach(s => {
-        const m = computeMetrics(s.data);
-        const qVal = isFinite(m.q) ? Math.min(m.q, 20) : 0;
-        const qClass = qVal > 5 ? 'q-high' : qVal > 3 ? 'q-mid' : 'q-low';
+    students.forEach(s=>{
+        const approved = s.approved || [];
+        const total    = approved.length;
+        const pct      = Math.round(total/TOTAL_IDEAL*100);
+        const m        = computeMetrics(approved);
+        const qVal     = isFinite(m.q)?Math.min(m.q,20):0;
+        const qClass   = qVal>5?'q-high':qVal>3?'q-mid':'q-low';
+        // Mostrar hasta 4 tags, resto como "+N más"
+        const preview  = approved.slice(0,4);
+        const extra    = approved.length-4;
+        const tags     = preview.map(sub=>`<span class="subject-tag y${sub.year}">${sub.name.split(' ')[0]}</span>`).join('')
+                       + (extra>0?`<span class="subject-tag">+${extra} más</span>`:'');
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="td-name">${s.name}</td>
-            <td class="td-mono">${s.data[0]}</td>
-            <td class="td-mono">${s.data[1]}</td>
-            <td class="td-mono">${s.data[2]}</td>
-            <td class="td-mono">${s.data[3]}</td>
-            <td class="td-mono">${s.data[4]}</td>
-            <td class="td-mono" style="color:var(--text-primary);font-weight:600">${m.total}</td>
-            <td class="td-mono" style="color:var(--text-secondary)">${m.percent.toFixed(0)}%</td>
+            <td class="td-name">${escHtml(s.name)}</td>
+            <td class="td-mono" style="color:var(--text-primary);font-weight:600">${total}</td>
+            <td class="td-mono">${pct}%</td>
             <td><span class="q-chip ${qClass}">${qVal.toFixed(2)}</span></td>
             <td class="td-mono">${m.kl.toFixed(3)}</td>
-            <td><button class="btn btn-danger-ghost btn-sm" onclick="deleteStudent('${s.name.replace(/'/g,"\\'")}')">Eliminar</button></td>
-        `;
+            <td><div class="subject-tags">${tags}</div></td>
+            <td style="white-space:nowrap;">
+                <button class="btn btn-ghost btn-sm" onclick='showDetail(${JSON.stringify(s.name)})'>Ver</button>
+                <button class="btn btn-danger-ghost btn-sm" onclick='deleteStudent(${JSON.stringify(s.name)})'>✕</button>
+            </td>`;
         tbody.appendChild(tr);
     });
 }
 
-// ================================================================
-//  CHARTS
-// ================================================================
-const CHART_DEFAULTS = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: { duration: 500 },
-    plugins: {
-        legend: { labels: { color: '#8892A4', font: { size: 10, family: "'JetBrains Mono'" } } },
-        tooltip: { backgroundColor: '#131926', borderColor: '#1E2A3D', borderWidth: 1,
-                   titleColor: '#E4EAF4', bodyColor: '#8892A4', padding: 10 }
-    },
-    scales: {
-        x: { grid: { color: '#1E2A3D' }, ticks: { color: '#4A5568' } },
-        y: { grid: { color: '#1E2A3D' }, ticks: { color: '#4A5568' }, beginAtZero: true }
+function showDetail(name) {
+    const s = students.find(st=>st.name===name);
+    if(!s) return;
+    const approved = s.approved||[];
+    document.getElementById('detailName').textContent = s.name;
+    document.getElementById('detailSummary').textContent =
+        `${approved.length} de ${TOTAL_IDEAL} materias aprobadas (${Math.round(approved.length/TOTAL_IDEAL*100)}%)`;
+    const container = document.getElementById('detailSubjects');
+    container.innerHTML = '';
+    for(let y=1;y<=5;y++){
+        const subs = approved.filter(s=>s.year===y);
+        if(!subs.length) continue;
+        const h = document.createElement('div');
+        h.style.cssText='width:100%;font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 5px;';
+        h.textContent = `Año ${y}`;
+        container.appendChild(h);
+        subs.forEach(sub=>{
+            const t = document.createElement('span');
+            t.className=`subject-tag y${sub.year}`;
+            t.textContent=sub.name;
+            container.appendChild(t);
+        });
     }
+    openModal('studentDetailModal');
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function deleteStudent(name) {
+    students = students.filter(s=>s.name!==name);
+    await pushStudents();
+    await fetchStudents();
+    renderAll();
+    toast(`${name} eliminado`,'info');
+}
+
+// ================================================================
+//  MÉTRICAS (operan sobre array de {id,name,year})
+// ================================================================
+function computeMetrics(approved) {
+    // Contar aprobadas por año
+    const byYear = IDEAL.map((_,i)=>approved.filter(s=>s.year===i+1).length);
+    const sig    = buildSignal(byYear, 20);
+    const idealSig = buildSignal(IDEAL, 20);
+
+    // Q — igual que antes
+    const N = sig.length;
+    const mags = [], freqs = [];
+    for(let k=0;k<N/2;k++){
+        let sR=0,sI=0;
+        for(let n=0;n<N;n++){ const a=2*Math.PI*k*n/N; sR+=sig[n]*Math.cos(a); sI-=sig[n]*Math.sin(a); }
+        mags.push(Math.sqrt(sR*sR+sI*sI));
+        freqs.push(k/5);
+    }
+    const energies=mags.map(m=>m*m), tot=energies.reduce((a,b)=>a+b,0);
+    let cum=0, ci=energies.length-1;
+    for(let i=0;i<energies.length;i++){ cum+=energies[i]; if(cum>=tot*0.5){ci=i;break;} }
+    const f_c=freqs[ci]||0.1, bw=2*f_c;
+    const q = bw===0?Infinity:1/bw;
+
+    // KL divergence vs ideal
+    const totalApp = byYear.reduce((a,b)=>a+b,0);
+    const p_ideal  = IDEAL.map(v=>v/TOTAL_IDEAL);
+    const p_data   = byYear.map(v=>totalApp===0?1/5:v/totalApp);
+    let kl=0;
+    for(let i=0;i<5;i++){
+        if(p_ideal[i]>0&&p_data[i]>0) kl+=p_ideal[i]*Math.log(p_ideal[i]/p_data[i]);
+        else if(p_ideal[i]>0) kl+=100;
+    }
+    return {byYear, total:totalApp, pct:totalApp/TOTAL_IDEAL*100, q, kl};
+}
+
+function buildSignal(data,sps=20){
+    const sig=new Array(5*sps).fill(0);
+    for(let i=0;i<5;i++) for(let j=i*sps;j<(i+1)*sps;j++) sig[j]=data[i]||0;
+    return sig;
+}
+
+// ================================================================
+//  GRÁFICOS
+// ================================================================
+let chartNormal, chartQ, chartDemand, chartFreq;
+const CD = {
+    responsive:true, maintainAspectRatio:false, animation:{duration:400},
+    plugins:{ legend:{labels:{color:'#8892A4',font:{size:10,family:"'JetBrains Mono'"}}},
+              tooltip:{backgroundColor:'#131926',borderColor:'#1E2A3D',borderWidth:1,titleColor:'#E4EAF4',bodyColor:'#8892A4',padding:10} },
+    scales:{ x:{grid:{color:'#1E2A3D'},ticks:{color:'#4A5568'}}, y:{grid:{color:'#1E2A3D'},ticks:{color:'#4A5568'},beginAtZero:true} }
 };
 
 function updateCharts() {
-    if (students.length === 0) {
-        [chartNormal, chartQ, chartOpt].forEach(c => { if (c) c.destroy(); });
-        chartNormal = chartQ = chartOpt = null;
-        return;
-    }
+    if(!students.length){ [chartNormal,chartQ,chartDemand,chartFreq].forEach(c=>{if(c)c.destroy()}); return; }
 
-    const qValues = students.map(s => computeMetrics(s.data).q).filter(v => isFinite(v) && v < 100);
-    const mean = qValues.reduce((a, b) => a + b, 0) / qValues.length;
-    const std  = Math.sqrt(qValues.reduce((a, b) => a + (b - mean)**2, 0) / qValues.length);
+    const metrics = students.map(s=>computeMetrics(s.approved||[]));
+    const qVals   = metrics.map(m=>m.q).filter(v=>isFinite(v)&&v<100);
+    if(!qVals.length) return;
+    const mean = qVals.reduce((a,b)=>a+b,0)/qVals.length;
+    const std  = Math.sqrt(qVals.reduce((a,b)=>a+(b-mean)**2,0)/qVals.length)||0.01;
+    window._qStats = {mean,std};
 
-    // Normal chart
-    const xMin = Math.max(0, mean - 4*std), xMax = mean + 4*std;
-    const step = (xMax - xMin) / 100;
-    const normalPoints = [], normalValues = [];
-    for (let x = xMin; x <= xMax; x += step) {
-        normalPoints.push(x);
-        normalValues.push(Math.exp(-0.5*((x-mean)/std)**2) / (std*Math.sqrt(2*Math.PI)));
+    // Distribución Q
+    const bins=10, minQ=Math.min(...qVals), maxQ=Math.max(...qVals);
+    const bw=(maxQ-minQ)/bins||1;
+    const hist=new Array(bins).fill(0);
+    qVals.forEach(v=>hist[Math.min(bins-1,Math.floor((v-minQ)/bw))]++);
+    const hLabels=hist.map((_,i)=>(minQ+i*bw).toFixed(1));
+    const step=(maxQ-minQ)/80||0.1;
+    const normalPts=[], normalVals=[];
+    for(let x=minQ-std;x<=maxQ+std;x+=step){
+        normalPts.push(x);
+        normalVals.push(Math.exp(-0.5*((x-mean)/std)**2)/(std*Math.sqrt(2*Math.PI)));
     }
-    const bins = 10, minQ = Math.min(...qValues), maxQ = Math.max(...qValues);
-    const binWidth = (maxQ - minQ) / bins;
-    const hist = new Array(bins).fill(0);
-    qValues.forEach(v => { hist[Math.min(bins-1, Math.floor((v-minQ)/binWidth))]++; });
-    const histLabels = [], histData = [];
-    for (let i = 0; i < bins; i++) {
-        histLabels.push((minQ + i*binWidth).toFixed(1));
-        histData.push(hist[i]);
-    }
-    const scaleFactor = Math.max(...histData, 1) / Math.max(...normalValues);
-
-    if (chartNormal) chartNormal.destroy();
-    chartNormal = new Chart(document.getElementById('normalChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: histLabels,
-            datasets: [
-                { label: 'Frecuencia', data: histData,
-                  backgroundColor: 'rgba(62,201,167,0.3)', borderColor: 'rgba(62,201,167,0.8)', borderWidth: 1, order: 2 },
-                { label: 'Curva normal', data: normalPoints.map((_,i) => normalValues[i]*scaleFactor),
-                  type: 'line', borderColor: '#E8C547', backgroundColor: 'rgba(232,197,71,0.06)',
-                  borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4, order: 1 }
-            ]
-        },
-        options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, legend: { display: false } },
-                   scales: CHART_DEFAULTS.scales }
+    const scale=Math.max(...hist)/Math.max(...normalVals)||1;
+    if(chartNormal) chartNormal.destroy();
+    chartNormal = new Chart(document.getElementById('normalChart'),{
+        type:'bar', data:{ labels:hLabels,
+            datasets:[
+                {label:'Frecuencia',data:hist,backgroundColor:'rgba(62,201,167,0.3)',borderColor:'rgba(62,201,167,0.8)',borderWidth:1,order:2},
+                {label:'Normal',data:normalPts.map((_,i)=>normalVals[i]*scale),type:'line',borderColor:'#E8C547',backgroundColor:'rgba(232,197,71,0.06)',borderWidth:2,pointRadius:0,fill:true,tension:0.4,order:1}
+            ]},
+        options:{...CD,plugins:{...CD.plugins,legend:{display:false}}}
     });
 
-    // Q bar chart
-    if (chartQ) chartQ.destroy();
-    const labels = students.map(s => s.name.split(' ')[0]);
-    const dataQ  = students.map(s => { const q = computeMetrics(s.data).q; return isFinite(q)?Math.min(q,20):0; });
-    chartQ = new Chart(document.getElementById('qBarChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                data: dataQ,
-                backgroundColor: dataQ.map(v => v>5 ? 'rgba(62,201,167,0.7)' : v>3 ? 'rgba(232,197,71,0.7)' : 'rgba(232,93,74,0.7)'),
-                borderColor: dataQ.map(v => v>5 ? '#3EC9A7' : v>3 ? '#E8C547' : '#E85D4A'),
-                borderWidth: 1
-            }]
-        },
-        options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, legend: { display: false } },
-                   scales: { ...CHART_DEFAULTS.scales, x: { ...CHART_DEFAULTS.scales.x, ticks: { color: '#4A5568', maxRotation: 30 } } } }
+    // Q por alumno
+    const qLabels = students.map(s=>s.name.split(' ')[0]);
+    const qData   = metrics.map(m=>isFinite(m.q)?Math.min(m.q,20):0);
+    if(chartQ) chartQ.destroy();
+    chartQ = new Chart(document.getElementById('qBarChart'),{
+        type:'bar', data:{ labels:qLabels,
+            datasets:[{data:qData,
+                backgroundColor:qData.map(v=>v>5?'rgba(62,201,167,0.7)':v>3?'rgba(232,197,71,0.7)':'rgba(232,93,74,0.7)'),
+                borderColor:qData.map(v=>v>5?'#3EC9A7':v>3?'#E8C547':'#E85D4A'),borderWidth:1}]},
+        options:{...CD,plugins:{...CD.plugins,legend:{display:false}},
+                 scales:{...CD.scales,x:{...CD.scales.x,ticks:{color:'#4A5568',maxRotation:35}}}}
     });
 
-    // Oferta vs Demanda
-    if (chartOpt) chartOpt.destroy();
-    const avgData = [0,0,0,0,0];
-    students.forEach(s => { for(let i=0;i<5;i++) avgData[i] += s.data[i]; });
-    for(let i=0;i<5;i++) avgData[i] /= students.length;
-    chartOpt = new Chart(document.getElementById('optimizationChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: ['Año 1','Año 2','Año 3','Año 4','Año 5'],
-            datasets: [
-                { label: 'Ideal',  data: IDEAL,   backgroundColor: 'rgba(232,197,71,0.6)', borderColor: '#E8C547', borderWidth: 1 },
-                { label: 'Real',   data: avgData,  backgroundColor: 'rgba(62,201,167,0.5)', borderColor: '#3EC9A7', borderWidth: 1 }
-            ]
-        },
-        options: { ...CHART_DEFAULTS }
+    // Demanda por año
+    const avgByYear = IDEAL.map((_,i)=>metrics.reduce((a,m)=>a+m.byYear[i],0)/metrics.length);
+    if(chartDemand) chartDemand.destroy();
+    chartDemand = new Chart(document.getElementById('demandChart'),{
+        type:'bar', data:{ labels:['Año 1','Año 2','Año 3','Año 4','Año 5'],
+            datasets:[
+                {label:'Plan ideal',data:IDEAL,backgroundColor:'rgba(232,197,71,0.6)',borderColor:'#E8C547',borderWidth:1},
+                {label:'Aprobadas promedio',data:avgByYear,backgroundColor:'rgba(62,201,167,0.5)',borderColor:'#3EC9A7',borderWidth:1}
+            ]},
+        options:{...CD}
     });
 
-    window._qStats = { mean, std, min: Math.min(...qValues), max: Math.max(...qValues) };
+    // Frecuencia de materias
+    const freq={};
+    students.forEach(s=>(s.approved||[]).forEach(sub=>{ freq[sub.id]=(freq[sub.id]||0)+1; }));
+    const sorted = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    const fLabels = sorted.map(([id])=>{ const s=CATALOG.find(c=>c.id===id); return s?s.name.split(' ').slice(0,2).join(' '):id; });
+    const fData   = sorted.map(([,n])=>n);
+    const fColors = sorted.map(([id])=>{ const s=CATALOG.find(c=>c.id===id); return s?YEAR_COLORS[s.year-1]:'#4A5568'; });
+    if(chartFreq) chartFreq.destroy();
+    chartFreq = new Chart(document.getElementById('subjectFreqChart'),{
+        type:'bar', data:{ labels:fLabels,
+            datasets:[{data:fData,backgroundColor:fColors.map(c=>c+'99'),borderColor:fColors,borderWidth:1}]},
+        options:{...CD,indexAxis:'y',plugins:{...CD.plugins,legend:{display:false}},
+                 scales:{x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,stepSize:1}},y:{...CD.scales.y,ticks:{color:'#8892A4',font:{size:10}}}}}
+    });
 }
 
-// ================================================================
-//  STATS / KPIs
-// ================================================================
-function updateStats() {
-    if (students.length === 0) {
-        ['kpiMeanQ','kpiStdQ','kpiMeanKL','kpiAvgPct'].forEach(id => document.getElementById(id).textContent = '—');
-        const chip = document.getElementById('qInterpretation');
-        chip.className = 'interpretation-chip';
-        chip.textContent = 'Cargá alumnos para ver la distribución.';
+function updateKPIs() {
+    if(!students.length){
+        ['kpiMeanQ','kpiStdQ','kpiMeanKL','kpiAvgPct'].forEach(id=>document.getElementById(id).textContent='—');
+        const ch=document.getElementById('qInterpretation'); ch.className='interpretation-chip'; ch.textContent='Cargá alumnos para ver la distribución.';
         return;
     }
-    const s = window._qStats || { mean:0, std:0, min:0, max:0 };
-    document.getElementById('kpiMeanQ').textContent  = s.mean.toFixed(2);
-    document.getElementById('kpiStdQ').textContent   = s.std.toFixed(2);
-
-    const klVals = students.map(st => computeMetrics(st.data).kl);
-    const meanKL = klVals.reduce((a,b)=>a+b,0) / klVals.length;
+    const metrics = students.map(s=>computeMetrics(s.approved||[]));
+    const qVals   = metrics.map(m=>m.q).filter(v=>isFinite(v)&&v<100);
+    const mean    = qVals.reduce((a,b)=>a+b,0)/qVals.length;
+    const std     = Math.sqrt(qVals.reduce((a,b)=>a+(b-mean)**2,0)/qVals.length);
+    const meanKL  = metrics.reduce((a,m)=>a+m.kl,0)/metrics.length;
+    const avgPct  = metrics.reduce((a,m)=>a+m.pct,0)/metrics.length;
+    document.getElementById('kpiMeanQ').textContent  = mean.toFixed(2);
+    document.getElementById('kpiStdQ').textContent   = std.toFixed(2);
     document.getElementById('kpiMeanKL').textContent = meanKL.toFixed(3);
-
-    const pctVals = students.map(st => computeMetrics(st.data).percent);
-    const avgPct  = pctVals.reduce((a,b)=>a+b,0) / pctVals.length;
-    document.getElementById('kpiAvgPct').textContent = avgPct.toFixed(0) + '%';
-
-    const chip = document.getElementById('qInterpretation');
-    if (s.mean > 5) {
-        chip.className = 'interpretation-chip ok';
-        chip.textContent = '✓ Alta coherencia — avance predecible y eficiente';
-    } else if (s.mean > 3) {
-        chip.className = 'interpretation-chip warn';
-        chip.textContent = '⚠ Coherencia moderada — cierta irregularidad en los progresos';
-    } else {
-        chip.className = 'interpretation-chip danger';
-        chip.textContent = '✕ Baja coherencia — alta variabilidad, revisar plan de estudios';
-    }
+    document.getElementById('kpiAvgPct').textContent = avgPct.toFixed(0)+'%';
+    const ch=document.getElementById('qInterpretation');
+    if(mean>5){ ch.className='interpretation-chip ok'; ch.textContent='✓ Alta coherencia — avance predecible y eficiente'; }
+    else if(mean>3){ ch.className='interpretation-chip warn'; ch.textContent='⚠ Coherencia moderada — cierta irregularidad en los progresos'; }
+    else { ch.className='interpretation-chip danger'; ch.textContent='✕ Baja coherencia — alta variabilidad, revisar plan de estudios'; }
 }
 
 // ================================================================
-//  MAIN RENDER LOOP
+//  COORDINACIÓN
 // ================================================================
-function updateAll() {
-    document.getElementById('studentCount').textContent = students.length;
+function unlockCoord() {
+    const pin = document.getElementById('coordPin').value;
+    if(!pin){ document.getElementById('lockError').style.display='block'; return; }
+    // Verificamos con un request real al backend
+    fetch(`${API}/semesters`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Basic '+btoa('coord:'+pin)},
+        body: JSON.stringify({semesters})
+    }).then(r=>{
+        if(r.ok || r.status===200){
+            coordUnlocked=true;
+            document.getElementById('lockScreen').style.display='none';
+            document.getElementById('coordPanel').style.display='block';
+            buildSemSubjectGrid();
+            renderSemesters();
+            toast('Acceso concedido','success');
+        } else {
+            document.getElementById('lockError').style.display='block';
+        }
+    }).catch(()=>{ document.getElementById('lockError').style.display='block'; });
+}
+
+function buildSemSubjectGrid() {
+    const grid = document.getElementById('semSubjectGrid');
+    grid.innerHTML = '';
+    CATALOG.forEach(s=>{
+        const div=document.createElement('div');
+        div.className='sc-item';
+        div.innerHTML=`<input type="checkbox" id="semcb-${s.id}">
+            <label for="semcb-${s.id}">${s.name}<span class="sc-year">Año ${s.year} · C${s.sem}</span></label>`;
+        div.querySelector('input').addEventListener('change',()=>{});
+        grid.appendChild(div);
+    });
+}
+
+async function saveSemester() {
+    const label = document.getElementById('semLabel').value.trim();
+    if(!label){ toast('Indicá el cuatrimestre (ej: 2025-C1)','error'); return; }
+    const offered = CATALOG.filter(s=>document.getElementById(`semcb-${s.id}`)?.checked)
+                           .map(({id,name,year})=>({id,name,year}));
+    if(!offered.length){ toast('Seleccioná al menos una materia','error'); return; }
+    const idx = semesters.findIndex(s=>s.label===label);
+    if(idx!==-1) semesters[idx].offered=offered;
+    else semesters.push({label,offered});
+    await pushSemesters();
+    renderSemesters();
+    // Reset
+    document.getElementById('semLabel').value='';
+    document.querySelectorAll('[id^=semcb-]').forEach(cb=>cb.checked=false);
+}
+
+function renderSemesters() {
+    const container = document.getElementById('semesterList');
+    if(!semesters.length){
+        container.innerHTML='<div class="empty-state"><div class="icon">📅</div><p>No hay cuatrimestres cargados todavía.</p></div>';
+        return;
+    }
+    container.innerHTML='';
+    [...semesters].sort((a,b)=>b.label.localeCompare(a.label)).forEach(sem=>{
+        const div=document.createElement('div');
+        div.className='semester-card';
+        div.innerHTML=`
+            <div class="semester-card-header">
+                <span class="semester-label">${sem.label}</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <span class="card-badge">${sem.offered.length} materias</span>
+                    <button class="btn btn-danger-ghost btn-sm" onclick='deleteSemester("${sem.label}")'>✕</button>
+                </div>
+            </div>
+            <div class="semester-subjects">
+                ${sem.offered.map(s=>`<span class="offered-tag" style="border-color:${YEAR_COLORS[s.year-1]}44;color:${YEAR_COLORS[s.year-1]}">${s.name}</span>`).join('')}
+            </div>`;
+        container.appendChild(div);
+    });
+}
+
+async function deleteSemester(label) {
+    semesters = semesters.filter(s=>s.label!==label);
+    await pushSemesters();
+    renderSemesters();
+    toast(`Cuatrimestre ${label} eliminado`,'info');
+}
+
+// ================================================================
+//  DATOS DE PRUEBA & UTILS
+// ================================================================
+async function generateRandomData() {
+    const names=["Martín López","Lucía Fernández","Carlos Soria","Ana González","Jorge Pérez",
+                 "Micaela Torres","Diego Ramírez","Sofía Martínez","Luis Herrera","Cecilia Vidal"];
+    students = names.map(name=>{
+        // Simular avance realista: más materias de años bajos
+        const approved=[];
+        CATALOG.forEach(s=>{
+            const prob = s.year===1?0.85:s.year===2?0.6:s.year===3?0.35:s.year===4?0.15:0.05;
+            if(Math.random()<prob) approved.push({id:s.id,name:s.name,year:s.year});
+        });
+        return {name,approved};
+    });
+    await pushStudents();
+    await fetchStudents();
+    renderAll();
+    toast('10 alumnos de prueba generados','success');
+}
+
+function exportCSV() {
+    if(!students.length){ toast('No hay datos para exportar.','error'); return; }
+    let csv='Nombre,Aprobadas,Porcentaje,Q,KL\n';
+    students.forEach(s=>{
+        const m=computeMetrics(s.approved||[]);
+        const q=isFinite(m.q)?Math.min(m.q,20).toFixed(3):'0';
+        csv+=`"${s.name}",${m.total},${m.pct.toFixed(1)}%,${q},${m.kl.toFixed(3)}\n`;
+    });
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download='resonancia_curricular.csv';
+    a.click();
+    toast('CSV exportado','success');
+}
+
+function askClearAll() {
+    showConfirm('¿Borrar todos los alumnos?',
+        'Esta acción elimina permanentemente todos los registros de la base de datos. No se puede deshacer.',
+        'Borrar todo', async ()=>{
+            await fetch(`${API}/students`,{method:'DELETE'});
+            students=[];
+            renderAll();
+            toast('Base de datos vaciada','info');
+        });
+}
+
+// ================================================================
+//  RENDER PRINCIPAL
+// ================================================================
+function renderAll() {
     renderTable();
     updateCharts();
-    updateStats();
+    updateKPIs();
+    if(coordUnlocked) renderSemesters();
 }
 
 // ================================================================
 //  INIT
 // ================================================================
-window.onload = function() {
-    updateSignalPreview();
-    loadFromAPI();
-    // Enter key en nombre
-    document.getElementById('studentName').addEventListener('keydown', e => {
-        if (e.key === 'Enter') addStudent();
+window.onload = async function() {
+    buildSubjectSelector();
+    await fetchStudents();
+    await fetchSemesters();
+    renderAll();
+
+    document.getElementById('studentName').addEventListener('keydown', e=>{
+        if(e.key==='Enter') saveStudent();
+    });
+    document.getElementById('coordPin').addEventListener('keydown', e=>{
+        if(e.key==='Enter') unlockCoord();
+    });
+    document.querySelectorAll('.modal-overlay').forEach(m=>{
+        m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('active'); });
     });
 };
 </script>
-
 </body>
 </html>
