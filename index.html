@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resonancia Curricular · UNTREF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ── TOKENS ─────────────────────────────────────────── */
+        :root {
+            --bg-base:      #080C14;
+            --bg-surface:   #0D1220;
+            --bg-raised:    #131926;
+            --bg-hover:     #1A2235;
+            --border:       #1E2A3D;
+            --border-focus: #3A506B;
+            --amber:        #E8C547;
+            --amber-dim:    rgba(232,197,71,0.12);
+            --amber-glow:   rgba(232,197,71,0.25);
+            --teal:         #3EC9A7;
+            --teal-dim:     rgba(62,201,167,0.12);
+            --red:          #E85D4A;
+            --red-dim:      rgba(232,93,74,0.12);
+            --text-primary: #E4EAF4;
+            --text-secondary:#8892A4;
+            --text-muted:   #4A5568;
+            --mono:         'JetBrains Mono', monospace;
+            --sans:         'Inter', sans-serif;
+            --radius-sm:    8px;
+            --radius-md:    14px;
+            --radius-lg:    20px;
+            --shadow:       0 4px 24px rgba(0,0,0,0.4);
+        }
+
+        /* ── RESET & BASE ──────────────────────────────────── */
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            background: var(--bg-base);
+            font-family: var(--sans);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ── TOASTS ────────────────────────────────────────── */
+        #toast-container {
+            position: fixed;
+            top: 20px; right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            background: var(--bg-raised);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 18px;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 260px;
+            box-shadow: var(--shadow);
+            animation: toast-in 0.25s ease;
+            pointer-events: all;
+        }
+        .toast.success { border-left: 3px solid var(--teal); }
+        .toast.error   { border-left: 3px solid var(--red); }
+        .toast.info    { border-left: 3px solid var(--amber); }
+        .toast.out     { animation: toast-out 0.25s ease forwards; }
+        @keyframes toast-in  { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:none; } }
+        @keyframes toast-out { from { opacity:1; transform:none; } to { opacity:0; transform:translateX(20px); } }
+
+        /* ── MODAL ─────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg-raised);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+        }
+        .modal h3 { font-size: 1.1rem; margin-bottom: 10px; }
+        .modal p  { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+        /* ── HEADER ────────────────────────────────────────── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-surface);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-brand {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+        }
+        .header-brand h1 {
+            font-family: var(--mono);
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: var(--amber);
+        }
+        .header-brand span {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .db-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            background: var(--bg-raised);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 6px 14px;
+            transition: border-color 0.3s;
+        }
+        .db-pill.ok     { border-color: var(--teal); color: var(--teal); }
+        .db-pill.error  { border-color: var(--red);  color: var(--red); }
+        .db-pill .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+        }
+        .db-pill.loading .dot { animation: blink 1s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+        /* ── LAYOUT ────────────────────────────────────────── */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 0;
+            min-height: calc(100vh - 65px);
+        }
+
+        /* ── SIDEBAR ───────────────────────────────────────── */
+        .sidebar {
+            border-right: 1px solid var(--border);
+            background: var(--bg-surface);
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .sidebar-section-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        /* ── FORM ──────────────────────────────────────────── */
+        .form-field { margin-bottom: 16px; }
+        .form-field label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 7px;
+        }
+        .input-text {
+            width: 100%;
+            background: var(--bg-raised);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-family: var(--sans);
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-text:focus {
+            border-color: var(--amber);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--amber-dim);
+        }
+
+        /* ── YEAR INPUTS ───────────────────────────────────── */
+        .year-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+        .year-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .year-cell label {
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+        .input-num {
+            width: 100%;
+            background: var(--bg-raised);
+            border: 1px solid var(--border);
+            color: var(--amber);
+            padding: 10px 4px;
+            border-radius: var(--radius-sm);
+            font-family: var(--mono);
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -moz-appearance: textfield;
+        }
+        .input-num::-webkit-outer-spin-button,
+        .input-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .input-num:focus {
+            border-color: var(--amber);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--amber-dim);
+        }
+        .year-max {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            font-family: var(--mono);
+        }
+
+        /* ── MINI SIGNAL PREVIEW ───────────────────────────── */
+        .signal-preview {
+            height: 40px;
+            width: 100%;
+            border-radius: var(--radius-sm);
+            background: var(--bg-raised);
+            border: 1px solid var(--border);
+            margin-bottom: 18px;
+            overflow: hidden;
+        }
+        #signalSvg { width: 100%; height: 100%; }
+
+        /* ── BUTTONS ───────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            font-family: var(--sans);
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            padding: 10px 20px;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: var(--amber);
+            color: var(--bg-base);
+        }
+        .btn-primary:hover { background: #F0D060; transform: translateY(-1px); box-shadow: 0 4px 16px var(--amber-glow); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-focus); }
+
+        .btn-danger-ghost {
+            background: transparent;
+            color: var(--red);
+            border: 1px solid rgba(232,93,74,0.3);
+        }
+        .btn-danger-ghost:hover { background: var(--red-dim); border-color: var(--red); }
+
+        .btn-danger {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(232,93,74,0.3);
+        }
+        .btn-danger:hover { background: var(--red); color: white; }
+
+        .btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: 6px; }
+        .btn-full { width: 100%; }
+
+        /* ── DIVIDER ───────────────────────────────────────── */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .student-count-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .student-count-label strong {
+            font-family: var(--mono);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ── MAIN CONTENT ──────────────────────────────────── */
+        .main-content {
+            padding: 28px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            overflow: auto;
+        }
+
+        /* ── KPI ROW ───────────────────────────────────────── */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+        .kpi {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .kpi:hover { border-color: var(--border-focus); }
+        .kpi-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .kpi-value {
+            font-family: var(--mono);
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--amber);
+        }
+        .kpi-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+        .kpi-accent {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--amber);
+            opacity: 0.4;
+        }
+        .kpi.teal .kpi-value { color: var(--teal); }
+        .kpi.teal .kpi-accent { background: var(--teal); }
+
+        /* ── CARD ──────────────────────────────────────────── */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 22px 24px;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .card-title {
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        .card-badge {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background: var(--bg-raised);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 3px 8px;
+        }
+
+        /* ── CHART GRID ────────────────────────────────────── */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+        .chart-wrap { position: relative; height: 200px; }
+        .interpretation-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            padding: 8px 14px;
+            border-radius: 6px;
+            margin-top: 12px;
+            background: var(--bg-raised);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .interpretation-chip.ok     { border-color: rgba(62,201,167,0.4); background: var(--teal-dim); color: var(--teal); }
+        .interpretation-chip.warn   { border-color: rgba(232,197,71,0.4); background: var(--amber-dim); color: var(--amber); }
+        .interpretation-chip.danger { border-color: rgba(232,93,74,0.4);  background: var(--red-dim);  color: var(--red); }
+
+        /* ── TABLE ─────────────────────────────────────────── */
+        .table-wrap { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+        thead th {
+            padding: 10px 12px;
+            text-align: left;
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        tbody td {
+            padding: 11px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            transition: background 0.15s;
+        }
+        tbody tr:hover td { background: var(--bg-raised); }
+        tbody tr:last-child td { border-bottom: none; }
+        .td-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .td-mono {
+            font-family: var(--mono);
+            font-size: 0.8rem;
+        }
+        .q-chip {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        .q-high   { background: rgba(62,201,167,0.15); color: var(--teal); }
+        .q-mid    { background: rgba(232,197,71,0.15); color: var(--amber); }
+        .q-low    { background: rgba(232,93,74,0.15);  color: var(--red); }
+
+        /* ── TABLE ACTIONS ─────────────────────────────────── */
+        .table-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── EMPTY STATE ───────────────────────────────────── */
+        .empty-state {
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .empty-state .icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+        .empty-state p { font-size: 0.85rem; line-height: 1.6; }
+
+        /* ── LOADING OVERLAY ───────────────────────────────── */
+        .skeleton-row td {
+            background: linear-gradient(90deg, var(--bg-raised) 25%, var(--bg-hover) 50%, var(--bg-raised) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            color: transparent;
+        }
+        @keyframes shimmer { from{background-position:200% 0} to{background-position:-200% 0} }
+
+        /* ── SYNC INDICATOR ────────────────────────────────── */
+        .sync-indicator {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+        .sync-indicator.active { display: flex; }
+        .sync-spinner {
+            width: 10px; height: 10px;
+            border: 2px solid var(--border);
+            border-top-color: var(--amber);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── FOOTER ────────────────────────────────────────── */
+        footer {
+            padding: 20px 32px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        /* ── RESPONSIVE ────────────────────────────────────── */
+        @media (max-width: 1100px) {
+            .main-layout { grid-template-columns: 1fr; }
+            .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+            .charts-row { grid-template-columns: 1fr 1fr; }
+            .kpi-row { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 640px) {
+            .header { padding: 14px 16px; }
+            .header-brand span { display: none; }
+            .main-content { padding: 20px 16px; }
+            .charts-row { grid-template-columns: 1fr; }
+            .kpi-row { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── TOAST CONTAINER ───────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ── MODAL CONFIRM ─────────────────────────────────── -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+        <h3 id="modalTitle">¿Eliminar todos los registros?</h3>
+        <p id="modalDesc">Esta acción borrará permanentemente todos los datos de la base de datos compartida. No se puede deshacer.</p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-danger" id="modalConfirmBtn" onclick="confirmAction()">Eliminar todo</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── HEADER ─────────────────────────────────────────── -->
+<header class="header">
+    <div class="header-brand">
+        <h1>Resonancia Curricular</h1>
+        <span>UNTREF · Ingeniería de Sonido</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+        <div class="sync-indicator" id="syncIndicator">
+            <div class="sync-spinner"></div>
+            <span>Sincronizando…</span>
+        </div>
+        <div class="db-pill loading" id="dbPill">
+            <div class="dot"></div>
+            <span id="dbPillText">Conectando</span>
+        </div>
+    </div>
+</header>
+
+<!-- ── MAIN LAYOUT ────────────────────────────────────── -->
+<div class="main-layout">
+
+    <!-- ── SIDEBAR ──────────────────────────────────── -->
+    <aside class="sidebar">
+
+        <div>
+            <p class="sidebar-section-label">Cargar alumno</p>
+
+            <div class="form-field">
+                <label for="studentName">Nombre del alumno</label>
+                <input type="text" class="input-text" id="studentName" placeholder="Ej: Valentín García" autocomplete="off">
+            </div>
+
+            <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">
+                Materias aprobadas por año
+            </p>
+
+            <div class="year-grid">
+                <div class="year-cell">
+                    <label>A1</label>
+                    <input type="number" class="input-num" id="y1" value="10" min="0" max="15" oninput="updateSignalPreview()">
+                    <span class="year-max">/ 15</span>
+                </div>
+                <div class="year-cell">
+                    <label>A2</label>
+                    <input type="number" class="input-num" id="y2" value="5" min="0" max="8" oninput="updateSignalPreview()">
+                    <span class="year-max">/ 8</span>
+                </div>
+                <div class="year-cell">
+                    <label>A3</label>
+                    <input type="number" class="input-num" id="y3" value="3" min="0" max="7" oninput="updateSignalPreview()">
+                    <span class="year-max">/ 7</span>
+                </div>
+                <div class="year-cell">
+                    <label>A4</label>
+                    <input type="number" class="input-num" id="y4" value="1" min="0" max="7" oninput="updateSignalPreview()">
+                    <span class="year-max">/ 7</span>
+                </div>
+                <div class="year-cell">
+                    <label>A5</label>
+                    <input type="number" class="input-num" id="y5" value="0" min="0" max="7" oninput="updateSignalPreview()">
+                    <span class="year-max">/ 7</span>
+                </div>
+            </div>
+
+            <!-- Firma única: mini previsualización de la señal -->
+            <div class="signal-preview" title="Perfil de avance curricular">
+                <svg id="signalSvg" viewBox="0 0 300 40" preserveAspectRatio="none">
+                    <polyline id="signalLine"
+                        points=""
+                        fill="none"
+                        stroke="#E8C547"
+                        stroke-width="2"
+                        stroke-linejoin="round"/>
+                    <polyline id="signalIdeal"
+                        points=""
+                        fill="none"
+                        stroke="#3EC9A7"
+                        stroke-width="1.5"
+                        stroke-dasharray="4 3"
+                        stroke-linejoin="round"
+                        opacity="0.5"/>
+                </svg>
+            </div>
+            <p style="font-size:0.63rem;color:var(--text-muted);text-align:right;margin-top:-12px;margin-bottom:16px;">
+                <span style="color:var(--amber);">▬</span> Ingresado &nbsp;
+                <span style="color:var(--teal);">╌</span> Ideal
+            </p>
+
+            <button class="btn btn-primary btn-full" onclick="addStudent()">
+                Guardar alumno
+            </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div>
+            <p class="sidebar-section-label">Acciones de datos</p>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <button class="btn btn-ghost btn-full" onclick="generateRandomData()">
+                    Generar datos de prueba (10)
+                </button>
+                <button class="btn btn-ghost btn-full" onclick="exportCSV()">
+                    Exportar CSV
+                </button>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <p class="student-count-label">
+                <strong id="studentCount">0</strong> alumnos registrados
+            </p>
+            <button class="btn btn-danger-ghost btn-full" onclick="askClearAll()">
+                Borrar todos los datos
+            </button>
+        </div>
+
+    </aside>
+
+    <!-- ── MAIN CONTENT ──────────────────────────────── -->
+    <main class="main-content">
+
+        <!-- KPIs -->
+        <div class="kpi-row">
+            <div class="kpi">
+                <div class="kpi-label">Media Q</div>
+                <div class="kpi-value" id="kpiMeanQ">—</div>
+                <div class="kpi-sub">Coherencia temporal promedio</div>
+                <div class="kpi-accent"></div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Desv. Estándar Q</div>
+                <div class="kpi-value" id="kpiStdQ">—</div>
+                <div class="kpi-sub">Dispersión entre alumnos</div>
+                <div class="kpi-accent"></div>
+            </div>
+            <div class="kpi teal">
+                <div class="kpi-label">KL Divergencia · Media</div>
+                <div class="kpi-value" id="kpiMeanKL">—</div>
+                <div class="kpi-sub">vs. distribución ideal</div>
+                <div class="kpi-accent"></div>
+            </div>
+            <div class="kpi teal">
+                <div class="kpi-label">Avance promedio</div>
+                <div class="kpi-value" id="kpiAvgPct">—</div>
+                <div class="kpi-sub">% respecto al plan ideal</div>
+                <div class="kpi-accent"></div>
+            </div>
+        </div>
+
+        <!-- CHARTS ROW -->
+        <div class="charts-row">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Distribución de Q</span>
+                    <span class="card-badge" id="normalBadge">Normal</span>
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="normalChart"></canvas>
+                </div>
+                <div class="interpretation-chip" id="qInterpretation">
+                    Cargá alumnos para ver la distribución.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Q por alumno</span>
+                    <span class="card-badge">Factor Q</span>
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="qBarChart"></canvas>
+                </div>
+                <p style="font-size:0.7rem;color:var(--text-muted);margin-top:10px;">
+                    Q&gt;5 óptimo · Q 3–5 aceptable · Q&lt;3 irregular
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Oferta vs Demanda</span>
+                    <span class="card-badge">Por año</span>
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="optimizationChart"></canvas>
+                </div>
+                <p style="font-size:0.7rem;color:var(--text-muted);margin-top:10px;">
+                    <span style="color:var(--amber);">■</span> Ideal &nbsp;
+                    <span style="color:var(--teal);">■</span> Real (promedio)
+                </p>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Registro de alumnos</span>
+                <span class="card-badge" id="tableBadge">Base compartida</span>
+            </div>
+
+            <div class="table-wrap" id="tableWrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alumno</th>
+                            <th>A1</th><th>A2</th><th>A3</th><th>A4</th><th>A5</th>
+                            <th>Total</th>
+                            <th>%</th>
+                            <th>Q</th>
+                            <th>KL div.</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="11">
+                            <div class="empty-state">
+                                <div class="icon">📡</div>
+                                <p>Conectando a la base de datos…</p>
+                            </div>
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ── FOOTER ─────────────────────────────────────────── -->
+<footer>
+    UNTREF · Ingeniería de Sonido · Procesamiento de Señales aplicado a la gestión académica
+</footer>
+
+<!-- ── SCRIPTS ────────────────────────────────────────── -->
+<script>
+// ================================================================
+//  CONFIGURACIÓN
+// ================================================================
+const IDEAL       = [15, 8, 7, 7, 7];
+const IDEAL_MAXS  = [15, 8, 7, 7, 7];
+const TOTAL_IDEAL = IDEAL.reduce((a, b) => a + b, 0);
+const API_URL     = '/api/students';
+
+let students = [];
+let chartNormal, chartQ, chartOpt;
+let pendingAction = null;
+
+// ================================================================
+//  TOAST SYSTEM
+// ================================================================
+function toast(msg, type = 'info', duration = 3500) {
+    const container = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icons = { success: '✓', error: '✕', info: '·' };
+    el.innerHTML = `<span style="font-size:1rem;opacity:0.8">${icons[type]||'·'}</span><span>${msg}</span>`;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.classList.add('out');
+        setTimeout(() => el.remove(), 280);
+    }, duration);
+}
+
+// ================================================================
+//  MODAL SYSTEM
+// ================================================================
+function showModal(title, desc, confirmLabel, action) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalDesc').textContent = desc;
+    document.getElementById('modalConfirmBtn').textContent = confirmLabel;
+    pendingAction = action;
+    document.getElementById('confirmModal').classList.add('active');
+}
+function closeModal() {
+    document.getElementById('confirmModal').classList.remove('active');
+    pendingAction = null;
+}
+function confirmAction() {
+    closeModal();
+    if (pendingAction) pendingAction();
+}
+document.getElementById('confirmModal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+});
+
+// ================================================================
+//  DB STATUS
+// ================================================================
+function setDbStatus(state) {
+    const pill = document.getElementById('dbPill');
+    const text = document.getElementById('dbPillText');
+    pill.className = 'db-pill';
+    if (state === 'ok')      { pill.classList.add('ok');    text.textContent = 'Conectado'; }
+    if (state === 'error')   { pill.classList.add('error'); text.textContent = 'Sin conexión'; }
+    if (state === 'loading') { pill.classList.add('loading'); text.textContent = 'Conectando'; }
+}
+function setSyncVisible(on) {
+    document.getElementById('syncIndicator').classList.toggle('active', on);
+}
+
+// ================================================================
+//  API
+// ================================================================
+async function loadFromAPI() {
+    setDbStatus('loading');
+    try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        students = data.students || [];
+        setDbStatus('ok');
+        updateAll();
+    } catch (err) {
+        console.error('Load error:', err);
+        setDbStatus('error');
+        renderEmptyState('No se pudo conectar con la base de datos. Reintentando en 5 s…');
+        setTimeout(loadFromAPI, 5000);
+    }
+}
+
+async function saveToAPI() {
+    setSyncVisible(true);
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ students })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await loadFromAPI();
+        toast('Datos guardados', 'success');
+    } catch (err) {
+        console.error('Save error:', err);
+        toast('Error al guardar. Revisá la conexión.', 'error');
+    } finally {
+        setSyncVisible(false);
+    }
+}
+
+async function deleteAllInAPI() {
+    setSyncVisible(true);
+    try {
+        const res = await fetch(API_URL, { method: 'DELETE' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await loadFromAPI();
+        toast('Todos los registros eliminados', 'success');
+    } catch (err) {
+        console.error('Delete error:', err);
+        toast('Error al borrar los datos.', 'error');
+    } finally {
+        setSyncVisible(false);
+    }
+}
+
+// ================================================================
+//  SIGNAL PREVIEW (firma única del diseño)
+// ================================================================
+function updateSignalPreview() {
+    const vals = getYearValues();
+    const maxs = IDEAL_MAXS;
+    const W = 300, H = 40, pad = 8;
+    const usable = W - pad * 2;
+    const seg = usable / 4;
+
+    function toPoints(arr) {
+        return arr.map((v, i) => {
+            const x = pad + i * seg;
+            const norm = maxs[i] > 0 ? v / maxs[i] : 0;
+            const y = H - pad - norm * (H - pad * 2);
+            return `${x},${y}`;
+        }).join(' ');
+    }
+    function idealPoints() {
+        return IDEAL.map((v, i) => {
+            const x = pad + i * seg;
+            const norm = maxs[i] > 0 ? v / maxs[i] : 0;
+            const y = H - pad - norm * (H - pad * 2);
+            return `${x},${y}`;
+        }).join(' ');
+    }
+
+    document.getElementById('signalLine').setAttribute('points', toPoints(vals));
+    document.getElementById('signalIdeal').setAttribute('points', idealPoints());
+}
+
+function getYearValues() {
+    return [1,2,3,4,5].map(i => {
+        const v = parseInt(document.getElementById(`y${i}`).value) || 0;
+        return Math.min(v, IDEAL_MAXS[i-1]);
+    });
+}
+
+// ================================================================
+//  CÁLCULOS
+// ================================================================
+function buildSignal(data, sps = 20) {
+    const total = 5 * sps;
+    const sig = new Array(total).fill(0);
+    for (let i = 0; i < 5; i++) {
+        const start = i * sps;
+        const end = (i === 4) ? total : (i + 1) * sps;
+        for (let j = start; j < end; j++) sig[j] = data[i] || 0;
+    }
+    return sig;
+}
+
+function computeMetrics(data) {
+    const sig = buildSignal(data);
+    const idealSig = buildSignal(IDEAL);
+    let sumSq = 0;
+    for (let i = 0; i < sig.length; i++) sumSq += (sig[i] - idealSig[i]) ** 2;
+    const rms = Math.sqrt(sumSq / sig.length);
+
+    const N = sig.length;
+    const real = new Array(N).fill(0);
+    const imag = new Array(N).fill(0);
+    for (let k = 0; k < N / 2; k++) {
+        let sumR = 0, sumI = 0;
+        for (let n = 0; n < N; n++) {
+            const angle = (2 * Math.PI * k * n) / N;
+            sumR += sig[n] * Math.cos(angle);
+            sumI -= sig[n] * Math.sin(angle);
+        }
+        real[k] = sumR; imag[k] = sumI;
+    }
+    const mags = [], freqs = [];
+    for (let k = 0; k < N / 2; k++) {
+        mags.push(Math.sqrt(real[k] ** 2 + imag[k] ** 2));
+        freqs.push(k / 5);
+    }
+    const energies = mags.map(m => m * m);
+    const totalEnergy = energies.reduce((a, b) => a + b, 0);
+    let cumEnergy = 0, cutIdx = energies.length - 1;
+    for (let i = 0; i < energies.length; i++) {
+        cumEnergy += energies[i];
+        if (cumEnergy >= totalEnergy * 0.5) { cutIdx = i; break; }
+    }
+    const f_corte = freqs[cutIdx] || 0.1;
+    const bw = 2 * f_corte;
+    const q = (bw === 0) ? Infinity : (1 / bw);
+
+    const totalData = data.reduce((a, b) => a + b, 0);
+    const p_ideal = IDEAL.map(v => v / TOTAL_IDEAL);
+    const p_data  = data.map(v => (totalData === 0) ? 0.2 : v / totalData);
+    let kl = 0;
+    for (let i = 0; i < p_ideal.length; i++) {
+        if (p_ideal[i] > 0 && p_data[i] > 0) kl += p_ideal[i] * Math.log(p_ideal[i] / p_data[i]);
+        else if (p_ideal[i] > 0 && p_data[i] === 0) kl += 100;
+    }
+    const total   = totalData;
+    const percent = (total / TOTAL_IDEAL) * 100;
+    return { total, percent, rms, q, kl, f_corte, data };
+}
+
+// ================================================================
+//  UI ACTIONS
+// ================================================================
+async function addStudent() {
+    const name = document.getElementById('studentName').value.trim();
+    if (!name) { toast('Ingresá el nombre del alumno.', 'error'); return; }
+    const data = getYearValues();
+    const idx = students.findIndex(s => s.name === name);
+    if (idx !== -1) {
+        students[idx].data = data;
+        toast(`Registro de ${name} actualizado`, 'info');
+    } else {
+        students.push({ name, data });
+        toast(`${name} agregado`, 'info');
+    }
+    await saveToAPI();
+}
+
+async function deleteStudent(name) {
+    students = students.filter(s => s.name !== name);
+    await saveToAPI();
+    toast(`${name} eliminado`, 'info');
+}
+
+function askClearAll() {
+    showModal(
+        '¿Eliminar todos los registros?',
+        'Esta acción borrará permanentemente todos los datos de la base de datos compartida. No se puede deshacer.',
+        'Eliminar todo',
+        deleteAllInAPI
+    );
+}
+
+async function generateRandomData() {
+    const names = ["Martín","Lucía","Carlos","Ana","Jorge","Micaela","Diego","Sofía","Luis","Cecilia"];
+    students = names.map(name => ({
+        name,
+        data: [
+            Math.min(15, Math.floor(Math.random()*10)+5),
+            Math.min(8,  Math.floor(Math.random()*6)+1),
+            Math.min(7,  Math.floor(Math.random()*5)),
+            Math.min(7,  Math.floor(Math.random()*4)),
+            Math.min(7,  Math.floor(Math.random()*3))
+        ]
+    }));
+    await saveToAPI();
+    toast('10 alumnos de prueba generados', 'success');
+}
+
+function exportCSV() {
+    if (students.length === 0) { toast('No hay datos para exportar.', 'error'); return; }
+    let csv = "Nombre,Año1,Año2,Año3,Año4,Año5,Total,Q,KL\n";
+    students.forEach(s => {
+        const m = computeMetrics(s.data);
+        csv += `${s.name},${s.data.join(',')},${m.total},${m.q.toFixed(3)},${m.kl.toFixed(3)}\n`;
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' }));
+    a.download = 'resonancia_curricular.csv';
+    a.click();
+    toast('CSV exportado', 'success');
+}
+
+// ================================================================
+//  RENDER
+// ================================================================
+function renderEmptyState(msg) {
+    document.getElementById('tableBody').innerHTML = `
+        <tr><td colspan="11">
+            <div class="empty-state">
+                <div class="icon">📡</div>
+                <p>${msg}</p>
+            </div>
+        </td></tr>`;
+}
+
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    if (students.length === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="11">
+                <div class="empty-state">
+                    <div class="icon">📋</div>
+                    <p>Todavía no hay alumnos registrados.<br>Usá el formulario de la izquierda para agregar el primero.</p>
+                </div>
+            </td></tr>`;
+        return;
+    }
+    tbody.innerHTML = '';
+    students.forEach(s => {
+        const m = computeMetrics(s.data);
+        const qVal = isFinite(m.q) ? Math.min(m.q, 20) : 0;
+        const qClass = qVal > 5 ? 'q-high' : qVal > 3 ? 'q-mid' : 'q-low';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="td-name">${s.name}</td>
+            <td class="td-mono">${s.data[0]}</td>
+            <td class="td-mono">${s.data[1]}</td>
+            <td class="td-mono">${s.data[2]}</td>
+            <td class="td-mono">${s.data[3]}</td>
+            <td class="td-mono">${s.data[4]}</td>
+            <td class="td-mono" style="color:var(--text-primary);font-weight:600">${m.total}</td>
+            <td class="td-mono" style="color:var(--text-secondary)">${m.percent.toFixed(0)}%</td>
+            <td><span class="q-chip ${qClass}">${qVal.toFixed(2)}</span></td>
+            <td class="td-mono">${m.kl.toFixed(3)}</td>
+            <td><button class="btn btn-danger-ghost btn-sm" onclick="deleteStudent('${s.name.replace(/'/g,"\\'")}')">Eliminar</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ================================================================
+//  CHARTS
+// ================================================================
+const CHART_DEFAULTS = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 500 },
+    plugins: {
+        legend: { labels: { color: '#8892A4', font: { size: 10, family: "'JetBrains Mono'" } } },
+        tooltip: { backgroundColor: '#131926', borderColor: '#1E2A3D', borderWidth: 1,
+                   titleColor: '#E4EAF4', bodyColor: '#8892A4', padding: 10 }
+    },
+    scales: {
+        x: { grid: { color: '#1E2A3D' }, ticks: { color: '#4A5568' } },
+        y: { grid: { color: '#1E2A3D' }, ticks: { color: '#4A5568' }, beginAtZero: true }
+    }
+};
+
+function updateCharts() {
+    if (students.length === 0) {
+        [chartNormal, chartQ, chartOpt].forEach(c => { if (c) c.destroy(); });
+        chartNormal = chartQ = chartOpt = null;
+        return;
+    }
+
+    const qValues = students.map(s => computeMetrics(s.data).q).filter(v => isFinite(v) && v < 100);
+    const mean = qValues.reduce((a, b) => a + b, 0) / qValues.length;
+    const std  = Math.sqrt(qValues.reduce((a, b) => a + (b - mean)**2, 0) / qValues.length);
+
+    // Normal chart
+    const xMin = Math.max(0, mean - 4*std), xMax = mean + 4*std;
+    const step = (xMax - xMin) / 100;
+    const normalPoints = [], normalValues = [];
+    for (let x = xMin; x <= xMax; x += step) {
+        normalPoints.push(x);
+        normalValues.push(Math.exp(-0.5*((x-mean)/std)**2) / (std*Math.sqrt(2*Math.PI)));
+    }
+    const bins = 10, minQ = Math.min(...qValues), maxQ = Math.max(...qValues);
+    const binWidth = (maxQ - minQ) / bins;
+    const hist = new Array(bins).fill(0);
+    qValues.forEach(v => { hist[Math.min(bins-1, Math.floor((v-minQ)/binWidth))]++; });
+    const histLabels = [], histData = [];
+    for (let i = 0; i < bins; i++) {
+        histLabels.push((minQ + i*binWidth).toFixed(1));
+        histData.push(hist[i]);
+    }
+    const scaleFactor = Math.max(...histData, 1) / Math.max(...normalValues);
+
+    if (chartNormal) chartNormal.destroy();
+    chartNormal = new Chart(document.getElementById('normalChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: histLabels,
+            datasets: [
+                { label: 'Frecuencia', data: histData,
+                  backgroundColor: 'rgba(62,201,167,0.3)', borderColor: 'rgba(62,201,167,0.8)', borderWidth: 1, order: 2 },
+                { label: 'Curva normal', data: normalPoints.map((_,i) => normalValues[i]*scaleFactor),
+                  type: 'line', borderColor: '#E8C547', backgroundColor: 'rgba(232,197,71,0.06)',
+                  borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4, order: 1 }
+            ]
+        },
+        options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, legend: { display: false } },
+                   scales: CHART_DEFAULTS.scales }
+    });
+
+    // Q bar chart
+    if (chartQ) chartQ.destroy();
+    const labels = students.map(s => s.name.split(' ')[0]);
+    const dataQ  = students.map(s => { const q = computeMetrics(s.data).q; return isFinite(q)?Math.min(q,20):0; });
+    chartQ = new Chart(document.getElementById('qBarChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data: dataQ,
+                backgroundColor: dataQ.map(v => v>5 ? 'rgba(62,201,167,0.7)' : v>3 ? 'rgba(232,197,71,0.7)' : 'rgba(232,93,74,0.7)'),
+                borderColor: dataQ.map(v => v>5 ? '#3EC9A7' : v>3 ? '#E8C547' : '#E85D4A'),
+                borderWidth: 1
+            }]
+        },
+        options: { ...CHART_DEFAULTS, plugins: { ...CHART_DEFAULTS.plugins, legend: { display: false } },
+                   scales: { ...CHART_DEFAULTS.scales, x: { ...CHART_DEFAULTS.scales.x, ticks: { color: '#4A5568', maxRotation: 30 } } } }
+    });
+
+    // Oferta vs Demanda
+    if (chartOpt) chartOpt.destroy();
+    const avgData = [0,0,0,0,0];
+    students.forEach(s => { for(let i=0;i<5;i++) avgData[i] += s.data[i]; });
+    for(let i=0;i<5;i++) avgData[i] /= students.length;
+    chartOpt = new Chart(document.getElementById('optimizationChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Año 1','Año 2','Año 3','Año 4','Año 5'],
+            datasets: [
+                { label: 'Ideal',  data: IDEAL,   backgroundColor: 'rgba(232,197,71,0.6)', borderColor: '#E8C547', borderWidth: 1 },
+                { label: 'Real',   data: avgData,  backgroundColor: 'rgba(62,201,167,0.5)', borderColor: '#3EC9A7', borderWidth: 1 }
+            ]
+        },
+        options: { ...CHART_DEFAULTS }
+    });
+
+    window._qStats = { mean, std, min: Math.min(...qValues), max: Math.max(...qValues) };
+}
+
+// ================================================================
+//  STATS / KPIs
+// ================================================================
+function updateStats() {
+    if (students.length === 0) {
+        ['kpiMeanQ','kpiStdQ','kpiMeanKL','kpiAvgPct'].forEach(id => document.getElementById(id).textContent = '—');
+        const chip = document.getElementById('qInterpretation');
+        chip.className = 'interpretation-chip';
+        chip.textContent = 'Cargá alumnos para ver la distribución.';
+        return;
+    }
+    const s = window._qStats || { mean:0, std:0, min:0, max:0 };
+    document.getElementById('kpiMeanQ').textContent  = s.mean.toFixed(2);
+    document.getElementById('kpiStdQ').textContent   = s.std.toFixed(2);
+
+    const klVals = students.map(st => computeMetrics(st.data).kl);
+    const meanKL = klVals.reduce((a,b)=>a+b,0) / klVals.length;
+    document.getElementById('kpiMeanKL').textContent = meanKL.toFixed(3);
+
+    const pctVals = students.map(st => computeMetrics(st.data).percent);
+    const avgPct  = pctVals.reduce((a,b)=>a+b,0) / pctVals.length;
+    document.getElementById('kpiAvgPct').textContent = avgPct.toFixed(0) + '%';
+
+    const chip = document.getElementById('qInterpretation');
+    if (s.mean > 5) {
+        chip.className = 'interpretation-chip ok';
+        chip.textContent = '✓ Alta coherencia — avance predecible y eficiente';
+    } else if (s.mean > 3) {
+        chip.className = 'interpretation-chip warn';
+        chip.textContent = '⚠ Coherencia moderada — cierta irregularidad en los progresos';
+    } else {
+        chip.className = 'interpretation-chip danger';
+        chip.textContent = '✕ Baja coherencia — alta variabilidad, revisar plan de estudios';
+    }
+}
+
+// ================================================================
+//  MAIN RENDER LOOP
+// ================================================================
+function updateAll() {
+    document.getElementById('studentCount').textContent = students.length;
+    renderTable();
+    updateCharts();
+    updateStats();
+}
+
+// ================================================================
+//  INIT
+// ================================================================
+window.onload = function() {
+    updateSignalPreview();
+    loadFromAPI();
+    // Enter key en nombre
+    document.getElementById('studentName').addEventListener('keydown', e => {
+        if (e.key === 'Enter') addStudent();
+    });
+};
+</script>
+
+</body>
+</html>
