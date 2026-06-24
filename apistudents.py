@@ -5,28 +5,48 @@ from typing import List, Optional
 import json
 import os
 
-# ── VERCEL KV ────────────────────────────────────────────────────
+# ── UPSTASH REDIS ─────────────────────────────────────────────────
+# Vercel KV fue dado de baja en diciembre 2024.
+# Ahora se usa Upstash Redis directamente desde el Marketplace de Vercel.
+# Las variables de entorno se inyectan automáticamente al linkear el proyecto:
+#   UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN
+
 try:
-    from vercel_kv import kv
-    KV_AVAILABLE = True
-except ImportError:
+    from upstash_redis.asyncio import Redis as UpstashRedis
+    _url   = os.getenv("UPSTASH_REDIS_REST_URL")
+    _token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+    if _url and _token:
+        _redis = UpstashRedis(url=_url, token=_token)
+        KV_AVAILABLE = True
+    else:
+        raise ValueError("Faltan variables UPSTASH_REDIS_REST_URL / TOKEN")
+except Exception as _e:
     KV_AVAILABLE = False
+    _redis = None
 
-    # Fallback en memoria para desarrollo local
-    class InMemoryKV:
-        def __init__(self):
-            self._store = {}
+    # Fallback en memoria para desarrollo local sin credenciales
+    class _InMemoryKV:
+        def __init__(self): self._store = {}
+        async def get(self, key): return self._store.get(key)
+        async def set(self, key, value): self._store[key] = value
+        async def delete(self, key): self._store.pop(key, None)
 
-        async def get(self, key: str):
-            return self._store.get(key)
+    _redis = _InMemoryKV()
 
-        async def set(self, key: str, value: str):
-            self._store[key] = value
 
-        async def delete(self, key: str):
-            self._store.pop(key, None)
+class _KVAdapter:
+    """Wrapper que expone la misma interfaz async que el código usa."""
+    async def get(self, key: str):
+        return await _redis.get(key)
 
-    kv = InMemoryKV()
+    async def set(self, key: str, value: str):
+        await _redis.set(key, value)
+
+    async def delete(self, key: str):
+        await _redis.delete(key)
+
+
+kv = _KVAdapter()
 
 # ── CONSTANTES ───────────────────────────────────────────────────
 KV_KEY = "students"
