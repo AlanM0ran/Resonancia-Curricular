@@ -222,7 +222,62 @@
         .sc-item label { font-size:0.75rem; color:var(--text-secondary); cursor:pointer; line-height:1.3; }
         .sc-item label .sc-year { font-family:var(--mono); font-size:0.65rem; color:var(--text-muted); display:block; }
 
-        /* ── RESPONSIVE ── */
+        /* ── OFERTA VS DEMANDA ── */
+        .demand-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+        .demand-card { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 20px; transition:border-color 0.2s; }
+        .demand-card:hover { border-color:var(--border-focus); }
+        .demand-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+        .demand-card-name { font-size:0.85rem; font-weight:600; color:var(--text-primary); line-height:1.3; }
+        .demand-card-year { font-family:var(--mono); font-size:0.68rem; padding:2px 7px; border-radius:4px; }
+        .demand-bar-wrap { height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin:10px 0 6px; }
+        .demand-bar-fill { height:100%; border-radius:3px; transition:width 0.4s; }
+        .demand-count { font-family:var(--mono); font-size:0.78rem; color:var(--text-muted); }
+        .demand-count strong { color:var(--text-primary); }
+
+        .coverage-chip { display:inline-flex; align-items:center; gap:6px; font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:4px; }
+        .coverage-high   { background:rgba(62,201,167,0.15);  color:var(--teal); }
+        .coverage-mid    { background:rgba(232,197,71,0.15);  color:var(--amber); }
+        .coverage-low    { background:rgba(232,93,74,0.15);   color:var(--red); }
+        .coverage-none   { background:var(--bg-raised);       color:var(--text-muted); border:1px solid var(--border); }
+
+        .sem-selector { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+        .sem-selector label { font-size:0.78rem; color:var(--text-secondary); font-weight:500; }
+        .sem-select { background:var(--bg-raised); border:1px solid var(--border); color:var(--text-primary); padding:8px 14px; border-radius:var(--radius-sm); font-family:var(--sans); font-size:0.85rem; cursor:pointer; }
+        .sem-select:focus { border-color:var(--amber); outline:none; }
+        .sem-select option { background:var(--bg-raised); }
+
+        .bottleneck-list { display:flex; flex-direction:column; gap:8px; }
+        .bottleneck-row { display:flex; align-items:center; gap:14px; padding:12px 16px; background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--radius-sm); transition:border-color 0.2s; }
+        .bottleneck-row:hover { border-color:var(--border-focus); }
+        .bottleneck-rank { font-family:var(--mono); font-size:0.75rem; color:var(--text-muted); width:24px; flex-shrink:0; }
+        .bottleneck-name { flex:1; font-size:0.85rem; color:var(--text-primary); }
+        .bottleneck-meta { font-size:0.72rem; color:var(--text-muted); }
+        .bottleneck-demand { font-family:var(--mono); font-size:0.9rem; font-weight:700; color:var(--red); min-width:32px; text-align:right; }
+
+        .trayectoria-card { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px 22px; margin-bottom:12px; }
+        .trayectoria-name { font-size:0.88rem; font-weight:600; color:var(--text-primary); margin-bottom:10px; }
+        .trayectoria-subjects { display:flex; flex-wrap:wrap; gap:6px; }
+        .traj-chip { font-size:0.75rem; padding:4px 10px; border-radius:5px; border:1px solid; display:flex; align-items:center; gap:5px; }
+        .traj-natural { border-color:rgba(62,201,167,0.4); color:var(--teal); background:var(--teal-dim); }
+        .traj-salto   { border-color:rgba(232,197,71,0.4); color:var(--amber); background:var(--amber-dim); }
+        .traj-avanzado{ border-color:rgba(183,148,244,0.4); color:#B794F4; background:rgba(183,148,244,0.1); }
+
+        .analysis-empty { display:flex; flex-direction:column; align-items:center; gap:12px; padding:60px 24px; color:var(--text-muted); text-align:center; }
+        .analysis-empty .icon { font-size:2.5rem; opacity:0.3; }
+        .analysis-empty p { font-size:0.85rem; line-height:1.6; max-width:360px; }
+
+        .kpi-row-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+        .section-divider { display:flex; align-items:center; gap:14px; margin:8px 0 20px; }
+        .section-divider h3 { font-size:0.82rem; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap; }
+        .section-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+        /* ── TRAYECTORIA EN TAB ALUMNO ── */
+        .tray-banner { background:var(--teal-dim); border:1px solid rgba(62,201,167,0.3); border-radius:var(--radius-md); padding:16px 18px; margin-bottom:16px; }
+        .tray-banner-title { font-size:0.75rem; font-weight:600; color:var(--teal); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:8px; }
+        .tray-banner-empty { font-size:0.82rem; color:var(--text-muted); }
+
+        @media (max-width:900px) { .demand-grid { grid-template-columns:1fr 1fr; } .kpi-row-3 { grid-template-columns:1fr; } }
+        @media (max-width:640px) { .demand-grid { grid-template-columns:1fr; } }
         @media (max-width:1100px) {
             .split-layout { grid-template-columns:1fr; }
             .sidebar { border-right:none; border-bottom:1px solid var(--border); max-height:none; }
@@ -290,6 +345,7 @@
     <button class="tab-btn active" onclick="switchTab('tab-student')">Mi avance</button>
     <button class="tab-btn" onclick="switchTab('tab-analysis')">Análisis grupal</button>
     <button class="tab-btn" onclick="switchTab('tab-coord')">Coordinación</button>
+    <button class="tab-btn" onclick="switchTab('tab-oferta');renderOfertaDemanda()">Oferta vs Demanda</button>
 </nav>
 
 <!-- ════════════════════════════════════════════
@@ -318,7 +374,13 @@
                 <div class="progress-years" id="progYears"></div>
             </div>
 
-            <div id="subjectSelector"></div>
+        <!-- Banner trayectoria recomendada (se puebla si hay cuatrimestre activo) -->
+        <div id="trayBanner" class="tray-banner" style="display:none;">
+            <div class="tray-banner-title">📅 Materias disponibles para vos este cuatrimestre</div>
+            <div id="trayBannerContent" class="tray-banner-empty">—</div>
+        </div>
+
+        <div id="subjectSelector"></div>
         </div>
 
         <div class="divider"></div>
@@ -510,6 +572,103 @@
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════
+     TAB 4: OFERTA VS DEMANDA
+════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-oferta">
+  <div class="main-content" style="padding:28px 32px; flex-direction:column; gap:24px;">
+
+    <!-- Selector de cuatrimestre -->
+    <div class="sem-selector">
+        <label>Cuatrimestre a analizar:</label>
+        <select class="sem-select" id="ofertaSemSelect" onchange="renderOfertaDemanda()">
+            <option value="">— Seleccioná un cuatrimestre —</option>
+        </select>
+        <span id="ofertaSemBadge" style="font-size:0.72rem;color:var(--text-muted);"></span>
+    </div>
+
+    <!-- Estado vacío inicial -->
+    <div id="ofertaEmpty" class="analysis-empty">
+        <div class="icon">📊</div>
+        <p>Seleccioná un cuatrimestre para ver el análisis cruzado entre la oferta y la demanda real de los alumnos.</p>
+        <p style="margin-top:8px;font-size:0.78rem;">Si no hay cuatrimestres disponibles, un coordinador debe cargarlos primero desde la pestaña <strong style="color:var(--text-secondary);">Coordinación</strong>.</p>
+    </div>
+
+    <!-- Contenido del análisis (oculto hasta selección) -->
+    <div id="ofertaContent" style="display:none; flex-direction:column; gap:24px;">
+
+        <!-- KPIs de cobertura -->
+        <div class="kpi-row-3">
+            <div class="kpi teal">
+                <div class="kpi-label">Materias ofrecidas</div>
+                <div class="kpi-value" id="ov-ofrecidas">—</div>
+                <div class="kpi-sub">Este cuatrimestre</div>
+                <div class="kpi-accent"></div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Cobertura de demanda</div>
+                <div class="kpi-value" id="ov-cobertura">—</div>
+                <div class="kpi-sub">% de demanda cubierta</div>
+                <div class="kpi-accent"></div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Alumnos con al menos 1</div>
+                <div class="kpi-value" id="ov-alumnos">—</div>
+                <div class="kpi-sub">Pueden cursar algo</div>
+                <div class="kpi-accent"></div>
+            </div>
+        </div>
+
+        <!-- Cuellos de botella -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Cuellos de botella</span>
+                <span class="card-badge">Demanda no cubierta</span>
+            </div>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">
+                Materias con alta demanda que <strong style="color:var(--red)">no se ofrecen</strong> este cuatrimestre.
+                Son oportunidades perdidas para el avance curricular.
+            </p>
+            <div class="bottleneck-list" id="bottleneckList"></div>
+        </div>
+
+        <!-- Gráfico oferta vs demanda -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Demanda vs Cobertura por materia</span>
+                <span class="card-badge">Top 20</span>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:12px;">
+                Alumnos que tienen cada materia pendiente.
+                <span style="color:var(--teal);">■</span> Cubierta por la oferta &nbsp;
+                <span style="color:var(--red);">■</span> No ofrecida este cuatrimestre
+            </p>
+            <div class="chart-wrap" style="height:320px;"><canvas id="ovChart"></canvas></div>
+        </div>
+
+        <!-- Cobertura materia por materia -->
+        <div>
+            <div class="section-divider"><h3>Detalle de materias ofrecidas</h3></div>
+            <div class="demand-grid" id="demandGrid"></div>
+        </div>
+
+        <!-- Trayectorias recomendadas por alumno -->
+        <div>
+            <div class="section-divider"><h3>Trayectoria recomendada por alumno</h3></div>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">
+                Para cada alumno, las materias de la oferta que todavía no aprobó.
+                <span class="traj-chip traj-natural" style="display:inline-flex;vertical-align:middle;">Año siguiente</span>
+                indica progresión natural. &nbsp;
+                <span class="traj-chip traj-salto" style="display:inline-flex;vertical-align:middle;">Salto de año</span>
+                indica que está saltando al menos un año.
+            </p>
+            <div id="trayectoriasList"></div>
+        </div>
+
+    </div>
+  </div>
+</div>
+
 <footer style="padding:18px 32px;border-top:1px solid var(--border);text-align:center;font-size:0.72rem;color:var(--text-muted);letter-spacing:0.05em;">
     UNTREF · Ingeniería de Sonido · Procesamiento de Señales aplicado a la gestión académica
 </footer>
@@ -614,7 +773,7 @@ function switchTab(id) {
     document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    const idx = ['tab-student','tab-analysis','tab-coord'].indexOf(id);
+    const idx = ['tab-student','tab-analysis','tab-coord','tab-oferta'].indexOf(id);
     document.querySelectorAll('.tab-btn')[idx].classList.add('active');
 }
 
@@ -1155,7 +1314,264 @@ function renderAll() {
     renderTable();
     updateCharts();
     updateKPIs();
+    updateSemesterSelector();
+    updateTrayBanner();
     if(coordUnlocked) renderSemesters();
+}
+
+// ================================================================
+//  FASE 3 — ANÁLISIS CRUZADO OFERTA VS DEMANDA
+// ================================================================
+
+let chartOV = null;
+
+/**
+ * Retorna el cuatrimestre más reciente disponible, o '' si no hay.
+ */
+function latestSemester() {
+    if(!semesters.length) return '';
+    return [...semesters].sort((a,b)=>b.label.localeCompare(a.label))[0].label;
+}
+
+/**
+ * Dado un alumno, retorna el conjunto de IDs que todavía no aprobó.
+ */
+function pendingIds(student) {
+    const approvedSet = new Set((student.approved||[]).map(s=>s.id));
+    return CATALOG.filter(s=>!approvedSet.has(s.id)).map(s=>s.id);
+}
+
+/**
+ * Calcula la demanda de cada materia: cuántos alumnos la tienen pendiente.
+ * Retorna Map<id, count>
+ */
+function computeDemand() {
+    const demand = new Map();
+    CATALOG.forEach(s=>demand.set(s.id, 0));
+    students.forEach(st=>{
+        pendingIds(st).forEach(id=>demand.set(id, (demand.get(id)||0)+1));
+    });
+    return demand;
+}
+
+/**
+ * Actualiza el selector de cuatrimestres en Tab 4 y también el banner de trayectoria.
+ */
+function updateSemesterSelector() {
+    const sel = document.getElementById('ofertaSemSelect');
+    if(!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— Seleccioná un cuatrimestre —</option>';
+    [...semesters].sort((a,b)=>b.label.localeCompare(a.label)).forEach(s=>{
+        const opt = document.createElement('option');
+        opt.value = s.label;
+        opt.textContent = s.label + ` (${s.offered.length} materias)`;
+        if(s.label===current) opt.selected=true;
+        sel.appendChild(opt);
+    });
+    // Si no había selección previa, preseleccionar el más reciente
+    if(!current && semesters.length) sel.value = latestSemester();
+}
+
+/**
+ * Banner en Tab Alumno: materias disponibles para ese alumno en el cuatrimestre más reciente.
+ */
+function updateTrayBanner() {
+    const banner = document.getElementById('trayBanner');
+    const content = document.getElementById('trayBannerContent');
+    if(!semesters.length || !students.length) { banner.style.display='none'; return; }
+    const name = document.getElementById('studentName').value.trim();
+    if(!name) { banner.style.display='none'; return; }
+    const student = students.find(s=>s.name===name);
+    if(!student) { banner.style.display='none'; return; }
+    const sem = semesters.find(s=>s.label===latestSemester());
+    if(!sem) { banner.style.display='none'; return; }
+    const approvedSet = new Set((student.approved||[]).map(s=>s.id));
+    const available = sem.offered.filter(s=>!approvedSet.has(s.id));
+    banner.style.display='block';
+    if(!available.length) {
+        content.innerHTML = '<span style="color:var(--teal);font-size:0.82rem;">✓ Ya aprobaste todas las materias ofrecidas este cuatrimestre.</span>';
+        return;
+    }
+    // Determinar el año más alto que aprobó
+    const maxYearApproved = Math.max(0, ...(student.approved||[]).map(s=>s.year));
+    content.innerHTML = available.map(s=>{
+        const isNatural = s.year === maxYearApproved+1 || s.year === maxYearApproved;
+        const cls = isNatural ? 'traj-natural' : 'traj-salto';
+        const label = isNatural ? 'Año siguiente' : `Año ${s.year}`;
+        return `<span class="traj-chip ${cls}" style="margin:2px 3px;">${s.name} <span style="opacity:.7;font-size:.65rem;">${label}</span></span>`;
+    }).join('');
+}
+
+/**
+ * Render principal del Tab 4.
+ */
+function renderOfertaDemanda() {
+    const sel   = document.getElementById('ofertaSemSelect');
+    const label = sel ? sel.value : '';
+    const empty = document.getElementById('ofertaEmpty');
+    const cont  = document.getElementById('ofertaContent');
+
+    if(!label || !semesters.length) {
+        empty.style.display='flex'; cont.style.display='none'; return;
+    }
+    const sem = semesters.find(s=>s.label===label);
+    if(!sem) { empty.style.display='flex'; cont.style.display='none'; return; }
+
+    empty.style.display='none';
+    cont.style.display='flex';
+
+    const demand  = computeDemand();
+    const offered = new Set(sem.offered.map(s=>s.id));
+    const totalStudents = students.length;
+
+    // ── KPIs ──
+    const ofrecidasCount = sem.offered.length;
+    // Demanda total = suma de demanda de materias con al menos 1 pendiente entre los alumnos
+    const demandedIds = CATALOG.filter(s=>demand.get(s.id)>0);
+    const totalDemand = demandedIds.reduce((a,s)=>a+demand.get(s.id),0);
+    const coveredDemand = sem.offered.reduce((a,s)=>a+(demand.get(s.id)||0),0);
+    const coveragePct = totalDemand>0 ? Math.round(coveredDemand/totalDemand*100) : 0;
+    // Alumnos con al menos 1 materia disponible
+    const alumnosCon = students.filter(st=>{
+        const approvedSet=new Set((st.approved||[]).map(s=>s.id));
+        return sem.offered.some(s=>!approvedSet.has(s.id));
+    }).length;
+
+    document.getElementById('ov-ofrecidas').textContent = ofrecidasCount;
+    document.getElementById('ov-cobertura').textContent = coveragePct+'%';
+    document.getElementById('ov-alumnos').textContent   = alumnosCon + (totalStudents>0?` / ${totalStudents}`:'');
+    document.getElementById('ofertaSemBadge').textContent = `${sem.offered.length} materias · ${totalStudents} alumnos`;
+
+    // Colorear KPI cobertura
+    const covKpi = document.getElementById('ov-cobertura').closest('.kpi');
+    covKpi.classList.remove('teal');
+    if(coveragePct>=70) covKpi.classList.add('teal');
+
+    // ── CUELLOS DE BOTELLA (materias no ofrecidas con más demanda) ──
+    const bottlenecks = CATALOG
+        .filter(s=>!offered.has(s.id) && demand.get(s.id)>0)
+        .sort((a,b)=>demand.get(b.id)-demand.get(a.id))
+        .slice(0,10);
+    const bList = document.getElementById('bottleneckList');
+    if(!bottlenecks.length) {
+        bList.innerHTML='<p style="font-size:0.82rem;color:var(--teal);padding:12px 0;">✓ Todas las materias con demanda están cubiertas este cuatrimestre.</p>';
+    } else {
+        bList.innerHTML = bottlenecks.map((s,i)=>{
+            const d = demand.get(s.id);
+            const pct = totalStudents>0 ? Math.round(d/totalStudents*100) : 0;
+            return `<div class="bottleneck-row">
+                <span class="bottleneck-rank">#${i+1}</span>
+                <div style="flex:1;">
+                    <div class="bottleneck-name">${s.name}</div>
+                    <div class="bottleneck-meta">Año ${s.year} · C${s.sem}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="bottleneck-demand">${d}</div>
+                    <div style="font-size:0.68rem;color:var(--text-muted);">${pct}% alumnos</div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ── GRÁFICO OFERTA VS DEMANDA ──
+    const sorted = CATALOG
+        .filter(s=>demand.get(s.id)>0 || offered.has(s.id))
+        .sort((a,b)=>demand.get(b.id)-demand.get(a.id))
+        .slice(0,20);
+    const ovLabels  = sorted.map(s=>s.name.split(' ').slice(0,3).join(' '));
+    const ovDemand  = sorted.map(s=>demand.get(s.id)||0);
+    const ovColors  = sorted.map(s=>offered.has(s.id)?'rgba(62,201,167,0.75)':'rgba(232,93,74,0.75)');
+    const ovBorders = sorted.map(s=>offered.has(s.id)?'#3EC9A7':'#E85D4A');
+    if(chartOV) chartOV.destroy();
+    chartOV = new Chart(document.getElementById('ovChart'),{
+        type:'bar',
+        data:{ labels:ovLabels, datasets:[{
+            label:'Demanda (alumnos con pendiente)',
+            data:ovDemand, backgroundColor:ovColors, borderColor:ovBorders, borderWidth:1
+        }]},
+        options:{...CD, indexAxis:'y',
+            plugins:{...CD.plugins, legend:{display:false},
+                tooltip:{...CD.plugins.tooltip, callbacks:{
+                    label: ctx=>{
+                        const s=sorted[ctx.dataIndex];
+                        const cov=offered.has(s.id)?'✓ Cubierta':'✕ No ofrecida';
+                        return ` ${ctx.raw} alumnos · ${cov}`;
+                    }
+                }}
+            },
+            scales:{
+                x:{...CD.scales.x, ticks:{...CD.scales.x.ticks, stepSize:1}},
+                y:{...CD.scales.y, ticks:{color:'#8892A4', font:{size:10}}}
+            }
+        }
+    });
+
+    // ── GRID DE MATERIAS OFRECIDAS (con demanda) ──
+    const grid = document.getElementById('demandGrid');
+    grid.innerHTML='';
+    const maxDemand = Math.max(...sem.offered.map(s=>demand.get(s.id)||0), 1);
+    [...sem.offered]
+        .sort((a,b)=>(demand.get(b.id)||0)-(demand.get(a.id)||0))
+        .forEach(s=>{
+            const d = demand.get(s.id)||0;
+            const pct = Math.round(d/maxDemand*100);
+            const pctAlumnos = totalStudents>0 ? Math.round(d/totalStudents*100) : 0;
+            const color = YEAR_COLORS[s.year-1];
+            const cls = pctAlumnos>=60?'coverage-high':pctAlumnos>=30?'coverage-mid':pctAlumnos>=10?'coverage-low':'coverage-none';
+            const label = pctAlumnos>=60?'Alta demanda':pctAlumnos>=30?'Demanda media':pctAlumnos>=10?'Baja demanda':'Sin demanda';
+            grid.innerHTML += `
+                <div class="demand-card">
+                    <div class="demand-card-header">
+                        <span class="demand-card-name">${s.name}</span>
+                        <span class="demand-card-year" style="background:${color}22;color:${color};border:1px solid ${color}44;">A${s.year}</span>
+                    </div>
+                    <div class="demand-bar-wrap">
+                        <div class="demand-bar-fill" style="width:${pct}%;background:${color};"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span class="demand-count"><strong>${d}</strong> ${d===1?'alumno':'alumnos'} con esta pendiente</span>
+                        <span class="coverage-chip ${cls}">${label}</span>
+                    </div>
+                </div>`;
+        });
+
+    // ── TRAYECTORIAS POR ALUMNO ──
+    const tList = document.getElementById('trayectoriasList');
+    if(!students.length) {
+        tList.innerHTML='<div class="analysis-empty"><div class="icon">👥</div><p>No hay alumnos registrados todavía.</p></div>';
+        return;
+    }
+    tList.innerHTML='';
+    [...students]
+        .sort((a,b)=>a.name.localeCompare(b.name))
+        .forEach(st=>{
+            const approvedSet = new Set((st.approved||[]).map(s=>s.id));
+            const available   = sem.offered.filter(s=>!approvedSet.has(s.id));
+            if(!available.length) {
+                tList.innerHTML += `
+                    <div class="trayectoria-card">
+                        <div class="trayectoria-name">${escHtml(st.name)}</div>
+                        <span style="font-size:0.8rem;color:var(--teal);">✓ Ya aprobó todas las materias ofrecidas este cuatrimestre.</span>
+                    </div>`;
+                return;
+            }
+            const maxYearApproved = Math.max(0,...(st.approved||[]).map(s=>s.year));
+            const chips = available.map(s=>{
+                const isNatural = s.year===maxYearApproved || s.year===maxYearApproved+1;
+                const isAvanzado = s.year > maxYearApproved+1;
+                const cls = isNatural?'traj-natural':isAvanzado?'traj-avanzado':'traj-salto';
+                const tag = isNatural?'Natural':isAvanzado?`Año ${s.year} (avanzado)`:`Año ${s.year}`;
+                return `<span class="traj-chip ${cls}">${s.name} <span style="opacity:.65;font-size:.68rem;">${tag}</span></span>`;
+            }).join('');
+            tList.innerHTML += `
+                <div class="trayectoria-card">
+                    <div class="trayectoria-name">${escHtml(st.name)}
+                        <span style="font-family:var(--mono);font-size:0.72rem;color:var(--text-muted);font-weight:400;margin-left:8px;">${available.length} disponibles</span>
+                    </div>
+                    <div class="trayectoria-subjects">${chips}</div>
+                </div>`;
+        });
 }
 
 // ================================================================
@@ -1170,6 +1586,7 @@ window.onload = async function() {
     document.getElementById('studentName').addEventListener('keydown', e=>{
         if(e.key==='Enter') saveStudent();
     });
+    document.getElementById('studentName').addEventListener('input', ()=>updateTrayBanner());
     document.getElementById('coordPin').addEventListener('keydown', e=>{
         if(e.key==='Enter') unlockCoord();
     });
