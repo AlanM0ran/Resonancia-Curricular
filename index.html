@@ -124,26 +124,6 @@
         .year-pip-fill { position:absolute; bottom:0; left:0; right:0; background:var(--amber); transition:height 0.3s; opacity:0.7; }
         .year-pip-label { font-family:var(--mono); font-size:0.6rem; color:var(--text-muted); }
 
-        /* ── RECOMENDACIONES (FASE 5) ── */
-        .rec-block { background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; margin-top:12px; }
-        .rec-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-        .rec-header span { font-size:0.72rem; font-weight:600; color:var(--text-secondary); letter-spacing:0.06em; text-transform:uppercase; }
-        .rec-header small { font-size:0.6rem; color:var(--text-muted); }
-        .rec-list { display:flex; flex-direction:column; gap:6px; }
-        .rec-item { display:flex; align-items:center; justify-content:space-between; padding:6px 8px; border-radius:4px; background:var(--bg-surface); border-left:2px solid var(--amber); transition:background 0.15s; }
-        .rec-item:hover { background:var(--bg-hover); }
-        .rec-item .rec-left { display:flex; flex-direction:column; }
-        .rec-item .rec-name { font-size:0.8rem; font-weight:500; color:var(--text-primary); }
-        .rec-item .rec-meta { font-size:0.65rem; color:var(--text-muted); display:flex; gap:10px; flex-wrap:wrap; }
-        .rec-item .rec-meta .tag { padding:0 4px; border-radius:3px; }
-        .rec-item .rec-meta .offered { color:var(--teal); }
-        .rec-item .rec-meta .not-offered { color:var(--red); }
-        .rec-item .rec-score { font-family:var(--mono); font-size:0.85rem; font-weight:700; color:var(--amber); }
-        .rec-critical { border-color:var(--red) !important; }
-        .rec-critical .rec-name { color:var(--red); }
-        .rec-critical .rec-score { color:var(--red); }
-        .rec-empty { font-size:0.78rem; color:var(--text-muted); padding:8px 0; text-align:center; }
-
         /* ── SIGNAL PREVIEW ── */
         .signal-preview { height:38px; width:100%; border-radius:var(--radius-sm); background:var(--bg-raised); border:1px solid var(--border); overflow:hidden; margin-bottom:4px; }
         #signalSvg { width:100%; height:100%; }
@@ -319,7 +299,29 @@
         .csv-input-wrap textarea:focus { border-color:var(--amber); outline:none; }
         .preinsc-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
 
-        /* ── CORRELATIVAS EN SIDEBAR ── */
+        /* ── RECOMENDACIÓN INDIVIDUAL ── */
+        .rec-panel { margin-bottom:0; }
+        .rec-panel-title { font-size:0.68rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px; }
+        .rec-item { display:flex; align-items:flex-start; gap:10px; padding:9px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-raised); margin-bottom:6px; transition:border-color .15s; cursor:default; }
+        .rec-item:hover { border-color:var(--border-focus); }
+        .rec-item.rec-top { border-color:rgba(232,197,71,0.5); background:rgba(232,197,71,0.06); }
+        .rec-item.rec-oferta { border-color:rgba(62,201,167,0.4); background:rgba(62,201,167,0.05); }
+        .rec-rank { font-family:var(--mono); font-size:0.7rem; color:var(--text-muted); width:16px; flex-shrink:0; padding-top:1px; }
+        .rec-body { flex:1; min-width:0; }
+        .rec-name { font-size:0.82rem; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .rec-meta { display:flex; gap:5px; flex-wrap:wrap; margin-top:4px; }
+        .rec-tag { font-size:0.62rem; padding:1px 6px; border-radius:3px; border:1px solid; white-space:nowrap; }
+        .rec-tag-unlock { border-color:rgba(183,148,244,.4); color:#B794F4; background:rgba(183,148,244,.1); }
+        .rec-tag-oferta { border-color:rgba(62,201,167,.4); color:var(--teal); background:var(--teal-dim); }
+        .rec-tag-demand  { border-color:rgba(232,197,71,.4); color:var(--amber); background:var(--amber-dim); }
+        .rec-tag-year   { border-color:var(--border); color:var(--text-muted); background:var(--bg-base); }
+        .rec-score-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:6px; }
+
+        .block-alert { background:rgba(232,93,74,0.08); border:1px solid rgba(232,93,74,0.3); border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:8px; }
+        .block-alert-title { font-size:0.68rem; font-weight:700; color:var(--red); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+        .block-alert p { font-size:0.75rem; color:var(--text-secondary); margin:0; line-height:1.4; }
+
+        .rec-empty { font-size:0.78rem; color:var(--text-muted); padding:8px 0; line-height:1.5; }
         .prereq-status { font-size:0.72rem; color:var(--text-muted); margin-top:3px; }
         .prereq-status.ok   { color:var(--teal); }
         .prereq-status.fail { color:var(--red); }
@@ -423,19 +425,12 @@
                 <div class="progress-years" id="progYears"></div>
             </div>
 
-        <!-- Banner trayectoria recomendada (se puebla si hay cuatrimestre activo) -->
-        <div id="trayBanner" class="tray-banner" style="display:none;">
-            <div class="tray-banner-title">📅 Materias disponibles para vos este cuatrimestre</div>
-            <div id="trayBannerContent" class="tray-banner-empty">—</div>
-        </div>
-
-        <!-- RECOMENDACIONES PERSONALIZADAS (FASE 5) -->
-        <div id="recBlock" class="rec-block" style="display:none;">
-            <div class="rec-header">
-                <span>🎯 Tus mejores movidas este cuatrimestre</span>
-                <small>score individual</small>
-            </div>
-            <div id="recList" class="rec-list"></div>
+        <!-- Panel de recomendación individual (Fase 5) -->
+        <div id="recPanel" style="display:none;" class="rec-panel">
+            <div id="recBlockAlerts"></div>
+            <p class="rec-panel-title">🎯 Tus mejores movidas este cuatrimestre</p>
+            <div id="recList"></div>
+            <div id="recUnlockable" style="margin-top:10px;"></div>
         </div>
 
         <div id="subjectSelector"></div>
@@ -1197,79 +1192,6 @@ function updateSignalPreview() {
 }
 
 // ================================================================
-//  RECOMENDACIONES PERSONALIZADAS (FASE 5)
-// ================================================================
-function updateRecommendations() {
-    const name = document.getElementById('studentName').value.trim();
-    const block = document.getElementById('recBlock');
-    const list = document.getElementById('recList');
-    if(!name || !students.length) { block.style.display='none'; return; }
-    const student = students.find(s=>s.name===name);
-    if(!student) { block.style.display='none'; return; }
-    const approvedSet = new Set((student.approved||[]).map(s=>s.id));
-    const avail = habilitadas(approvedSet); // materias que puede cursar (correlativas cumplidas)
-    if(!avail.length) {
-        block.style.display='block';
-        list.innerHTML = '<div class="rec-empty">✅ No tenés materias pendientes con correlativas cumplidas.</div>';
-        return;
-    }
-
-    // Oferta activa (cuatrimestre más reciente)
-    const activeSem = semesters.length ? semesters.find(s=>s.label===latestSemester()) : null;
-    const offeredIds = activeSem ? new Set(activeSem.offered.map(s=>s.id)) : new Set();
-
-    // Datos de preinscripción (cache)
-    const preData = preinscData.data || {};
-    const maxPre = Math.max(...Object.values(preData), 1);
-
-    // Calcular score para cada materia
-    const scored = avail.map(subj => {
-        const id = subj.id;
-        const impact = impactDepth(id); // profundidad de desbloqueo
-        const offered = offeredIds.has(id) ? 1 : 0;
-        const preCount = preData[id] || 0;
-        const preNorm = preCount / maxPre; // 0..1
-
-        // Normalizar impacto (max posible en el grafo)
-        const maxImpact = 10; // valor empírico
-        const impactNorm = Math.min(impact / maxImpact, 1);
-
-        // Ponderación: 50% impacto, 30% oferta, 20% preinscripción
-        const score = (impactNorm * 0.5 + offered * 0.3 + preNorm * 0.2) * 10;
-        return { ...subj, impact, offered, preCount, preNorm, score };
-    });
-
-    // Ordenar de mayor a menor score
-    scored.sort((a,b)=>b.score-a.score);
-
-    // Renderizar
-    block.style.display='block';
-    list.innerHTML = scored.map(s => {
-        const isCritical = s.impact > 4 && !s.offered;
-        const cls = isCritical ? 'rec-item rec-critical' : 'rec-item';
-        const offeredLabel = s.offered ? 
-            `<span class="tag offered">✓ ofrecida</span>` : 
-            `<span class="tag not-offered">✕ no ofrecida</span>`;
-        const preLabel = s.preCount > 0 ? `👥 ${s.preCount}` : '';
-        return `
-            <div class="${cls}" style="border-left-color: ${s.offered ? 'var(--teal)' : 'var(--red)'};">
-                <div class="rec-left">
-                    <div class="rec-name">${s.name}</div>
-                    <div class="rec-meta">
-                        <span>Año ${s.year}</span>
-                        ${offeredLabel}
-                        <span>🔓 ${s.impact} materias</span>
-                        ${preLabel ? `<span>${preLabel}</span>` : ''}
-                    </div>
-                    ${isCritical ? `<div style="font-size:0.65rem;color:var(--red);margin-top:3px;">⚠ Si no la cursás ahora, bloquea ${s.impact} materias</div>` : ''}
-                </div>
-                <div class="rec-score">${s.score.toFixed(1)}</div>
-            </div>
-        `;
-    }).join('');
-}
-
-// ================================================================
 //  GUARDAR ALUMNO
 // ================================================================
 async function saveStudent() {
@@ -1650,9 +1572,8 @@ function renderAll() {
     updateCharts();
     updateKPIs();
     updateSemesterSelector();
-    updateTrayBanner();
-    updateRecommendations(); // <-- FASE 5
     renderPreinsc();
+    updateTrayBanner(); // después de preinscData actualizado
     if(coordUnlocked) renderSemesters();
 }
 
@@ -1711,33 +1632,166 @@ function updateSemesterSelector() {
 }
 
 /**
- * Banner en Tab Alumno: materias disponibles para ese alumno en el cuatrimestre más reciente.
+ * Calcula el Score de Recomendación Individual para cada materia habilitada.
+ * Factores:
+ *   A) Desbloqueo: cuántas materias nuevas habilita si se aprueba (0–N)
+ *   B) Disponibilidad: está en la oferta activa (×2 bonus)
+ *   C) Validación grupal: demanda en preinscripción normalizada (0–1)
+ * Score = (desbloqueo + 1) × disponibilidad_mult × (1 + demanda_norm)
+ */
+function computeIndividualScore(approvedSet) {
+    const ofertaActiva = semesters.length
+        ? (semesters.find(s=>s.label===latestSemester())?.offered||[])
+        : [];
+    const ofertaIds   = new Set(ofertaActiva.map(s=>s.id));
+    const piData      = preinscData.data || {};
+    const maxPi       = Math.max(1, ...Object.values(piData));
+
+    // Materias habilitadas por correlativas y no aprobadas aún
+    const candidates = CATALOG.filter(s =>
+        !approvedSet.has(s.id) &&
+        (PREREQS[s.id]||[]).every(r => approvedSet.has(r))
+    );
+
+    return candidates.map(subj => {
+        // Factor A: desbloqueo directo
+        const unlockCount = CATALOG.filter(s =>
+            !approvedSet.has(s.id) &&
+            s.id !== subj.id &&
+            (PREREQS[s.id]||[]).includes(subj.id) &&
+            (PREREQS[s.id]||[]).filter(r=>r!==subj.id).every(r=>approvedSet.has(r))
+        ).length;
+
+        // Factor B: disponibilidad en oferta activa
+        const inOferta = ofertaIds.has(subj.id);
+        const ofertaMult = inOferta ? 2.0 : 1.0;
+
+        // Factor C: validación grupal por preinscripción
+        const piCount   = piData[subj.id] || 0;
+        const demandNorm = piCount / maxPi;
+
+        // Score final
+        const score = (unlockCount + 1) * ofertaMult * (1 + demandNorm);
+
+        // Impacto de bloqueo de la cadena completa
+        const chainDepth = impactDepth(subj.id);
+
+        return { subj, unlockCount, inOferta, piCount, demandNorm, score, chainDepth };
+    }).sort((a,b) => b.score - a.score);
+}
+
+/**
+ * Detecta materias con impacto crítico que el alumno tiene pendiente
+ * y que NO están en la oferta activa — situaciones de riesgo real.
+ */
+function computeBlockAlerts(approvedSet) {
+    const ofertaActiva = semesters.length
+        ? (semesters.find(s=>s.label===latestSemester())?.offered||[])
+        : [];
+    const ofertaIds = new Set(ofertaActiva.map(s=>s.id));
+
+    return CATALOG.filter(subj => {
+        if(approvedSet.has(subj.id)) return false;          // ya aprobada
+        if(ofertaIds.has(subj.id)) return false;            // está en oferta
+        const depth = impactDepth(subj.id);
+        if(depth < 4) return false;                          // impacto bajo
+        // Habilitada (podría cursarse si estuviera en la oferta)
+        return (PREREQS[subj.id]||[]).every(r=>approvedSet.has(r));
+    }).map(subj=>({ subj, depth:impactDepth(subj.id) }))
+      .sort((a,b)=>b.depth-a.depth)
+      .slice(0,3);
+}
+
+/**
+ * Renderiza el panel de recomendación individual en el sidebar.
+ * Reemplaza al antiguo updateTrayBanner.
  */
 function updateTrayBanner() {
-    const banner = document.getElementById('trayBanner');
-    const content = document.getElementById('trayBannerContent');
-    if(!semesters.length || !students.length) { banner.style.display='none'; return; }
+    const panel = document.getElementById('recPanel');
+    if(!panel) return;
+
     const name = document.getElementById('studentName').value.trim();
-    if(!name) { banner.style.display='none'; return; }
+    if(!name) { panel.style.display='none'; return; }
+
     const student = students.find(s=>s.name===name);
-    if(!student) { banner.style.display='none'; return; }
-    const sem = semesters.find(s=>s.label===latestSemester());
-    if(!sem) { banner.style.display='none'; return; }
-    const approvedSet = new Set((student.approved||[]).map(s=>s.id));
-    const available = sem.offered.filter(s=>!approvedSet.has(s.id));
-    banner.style.display='block';
-    if(!available.length) {
-        content.innerHTML = '<span style="color:var(--teal);font-size:0.82rem;">✓ Ya aprobaste todas las materias ofrecidas este cuatrimestre.</span>';
+    if(!student || !(student.approved||[]).length) {
+        panel.style.display='none'; return;
+    }
+
+    panel.style.display='block';
+    const approvedSet = new Set(student.approved.map(s=>s.id));
+    const recs        = computeIndividualScore(approvedSet);
+    const alerts      = computeBlockAlerts(approvedSet);
+    const latestLabel = latestSemester();
+
+    // ── Alertas de bloqueo crítico ───────────────────────────────
+    const alertsEl = document.getElementById('recBlockAlerts');
+    if(alerts.length && latestLabel) {
+        alertsEl.innerHTML = alerts.map(a=>`
+            <div class="block-alert">
+                <div class="block-alert-title">⚠ Bloqueo crítico</div>
+                <p><strong>${a.subj.name}</strong> no se ofrece este cuatrimestre.
+                   Si la necesitás, perdés acceso a <strong>${a.depth} materia${a.depth>1?'s':''}</strong>
+                   en cadena hasta que vuelva a abrirse.</p>
+            </div>`).join('');
+    } else {
+        alertsEl.innerHTML = '';
+    }
+
+    // ── Lista de recomendaciones rankeadas ───────────────────────
+    const recList = document.getElementById('recList');
+    if(!recs.length) {
+        recList.innerHTML = '<p class="rec-empty">No tenés materias habilitadas todavía. Aprobá las de primer año para desbloquear el resto.</p>';
+        document.getElementById('recUnlockable').innerHTML = '';
         return;
     }
-    // Determinar el año más alto que aprobó
-    const maxYearApproved = Math.max(0, ...(student.approved||[]).map(s=>s.year));
-    content.innerHTML = available.map(s=>{
-        const isNatural = s.year === maxYearApproved+1 || s.year === maxYearApproved;
-        const cls = isNatural ? 'traj-natural' : 'traj-salto';
-        const label = isNatural ? 'Año siguiente' : `Año ${s.year}`;
-        return `<span class="traj-chip ${cls}" style="margin:2px 3px;">${s.name} <span style="opacity:.7;font-size:.65rem;">${label}</span></span>`;
-    }).join('');
+
+    // Mostrar top 5 en la oferta activa primero, luego top 3 fuera de oferta
+    const enOferta  = recs.filter(r=>r.inOferta).slice(0,5);
+    const fueraOf   = recs.filter(r=>!r.inOferta).slice(0,3);
+    const maxScore  = recs[0].score;
+
+    function buildRecItem(r, rank) {
+        const pct   = Math.round(r.score/maxScore*100);
+        const color = pct>75?'var(--amber)':pct>40?'var(--teal)':'var(--text-muted)';
+        const cls   = r.inOferta ? (rank===1?'rec-item rec-top rec-oferta':'rec-item rec-oferta') : 'rec-item';
+        const tags  = [
+            r.inOferta ? `<span class="rec-tag rec-tag-oferta">✓ En oferta</span>` : '',
+            r.unlockCount>0 ? `<span class="rec-tag rec-tag-unlock">Desbloquea ${r.unlockCount}</span>` : '',
+            r.piCount>0 ? `<span class="rec-tag rec-tag-demand">${r.piCount} interesados</span>` : '',
+            `<span class="rec-tag rec-tag-year">Año ${r.subj.year}</span>`,
+        ].filter(Boolean).join('');
+        return `
+            <div class="${cls}">
+                <span class="rec-rank">${rank}</span>
+                <div class="rec-body">
+                    <div class="rec-name">${r.subj.name}</div>
+                    <div class="rec-meta">${tags}</div>
+                </div>
+                <div class="rec-score-dot" style="background:${color};" title="Score: ${r.score.toFixed(1)}"></div>
+            </div>`;
+    }
+
+    recList.innerHTML = '';
+    if(enOferta.length) {
+        recList.innerHTML = enOferta.map((r,i)=>buildRecItem(r,i+1)).join('');
+    } else if(latestLabel) {
+        recList.innerHTML = '<p class="rec-empty">Ninguna de tus materias habilitadas está en la oferta de este cuatrimestre.</p>';
+    } else {
+        recList.innerHTML = recs.slice(0,5).map((r,i)=>buildRecItem(r,i+1)).join('');
+    }
+
+    // ── Materias habilitadas fuera de oferta (para planificar) ───
+    const unlockEl = document.getElementById('recUnlockable');
+    if(fueraOf.length && latestLabel) {
+        unlockEl.innerHTML = `
+            <p style="font-size:.65rem;color:var(--text-muted);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">
+                También habilitadas (no en oferta)
+            </p>
+            ${fueraOf.map((r,i)=>buildRecItem(r,i+1)).join('')}`;
+    } else {
+        unlockEl.innerHTML = '';
+    }
 }
 
 /**
@@ -2153,4 +2207,143 @@ function renderPreinsc() {
         <p>Las siguientes materias tienen <strong>baja demanda declarada pero alto impacto de bloqueo</strong>.
         Si no se abren, bloquean cadenas largas aunque parezcan tener poco interés:</p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
-          ${silentAll.map(s=>`<span class="priority-badge priority-critical" title="Impacto: ${s.imp}">
+          ${silentAll.map(s=>`<span class="priority-badge priority-critical" title="Impacto: ${s.imp}">${s.cat?.name||s.id} (${s.count} int., imp. ${s.imp})</span>`).join('')}
+        </div>
+      </div>`;
+  } else {
+    alerts.innerHTML = '';
+  }
+
+  // Tabla principal
+  const tbody = document.getElementById('pi-table-body');
+  tbody.innerHTML = '';
+  scored.forEach((s,i)=>{
+    const pct = Math.round(s.score/maxScore*100);
+    const pCls = s.score>maxScore*0.6?'priority-critical':s.score>maxScore*0.35?'priority-high':s.score>maxScore*0.15?'priority-medium':'priority-low';
+    const pLbl = s.score>maxScore*0.6?'Crítico':s.score>maxScore*0.35?'Alto':s.score>maxScore*0.15?'Medio':'Bajo';
+    const barColor = s.score>maxScore*0.6?'var(--red)':s.score>maxScore*0.35?'var(--amber)':'var(--teal)';
+    const prereqTags = s.prereqs.map(pid=>{
+      const pc = CATALOG.find(c=>c.id===pid);
+      return `<span class="prereq-tag">${pc?pc.name.split(' ')[0]:pid}</span>`;
+    }).join('');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="td-mono" style="color:var(--text-muted);">${i+1}</td>
+      <td style="font-weight:600;color:var(--text-primary);">${s.cat?.name||s.id}</td>
+      <td class="td-mono">A${s.cat?.year||'?'}</td>
+      <td class="td-mono" style="color:var(--text-primary);font-weight:600;">${s.count}</td>
+      <td class="td-mono">${s.imp}</td>
+      <td>
+        <span class="td-mono" style="font-weight:700;">${s.score}</span>
+        <span class="score-bar-wrap"><span class="score-bar-fill" style="width:${pct}%;background:${barColor};"></span></span>
+      </td>
+      <td><span class="priority-badge ${pCls}">${pLbl}</span></td>
+      <td><div class="prereq-chain">${prereqTags||'<span style="font-size:.7rem;color:var(--text-muted);">—</span>'}</div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Gráfico
+  const top15 = scored.slice(0,15);
+  if(piChart) piChart.destroy();
+  piChart = new Chart(document.getElementById('pi-chart'), {
+    type:'bar',
+    data:{
+      labels: top15.map(s=>(s.cat?.name||s.id).split(' ').slice(0,3).join(' ')),
+      datasets:[
+        { label:'Score (Demanda × Impacto)', data:top15.map(s=>s.score),
+          backgroundColor:top15.map(s=>s.score>maxScore*0.6?'rgba(232,93,74,0.75)':s.score>maxScore*0.35?'rgba(232,197,71,0.75)':'rgba(62,201,167,0.75)'),
+          borderColor:top15.map(s=>s.score>maxScore*0.6?'#E85D4A':s.score>maxScore*0.35?'#E8C547':'#3EC9A7'),
+          borderWidth:1, order:1 },
+        { label:'Interesados declarados', data:top15.map(s=>s.count),
+          backgroundColor:'rgba(255,255,255,0.08)', borderColor:'rgba(255,255,255,0.3)',
+          borderWidth:1, type:'bar', order:2 }
+      ]
+    },
+    options:{...CD, indexAxis:'y',
+      plugins:{...CD.plugins,
+        tooltip:{...CD.plugins.tooltip, callbacks:{
+          label: ctx=>{
+            const s=top15[ctx.dataIndex];
+            if(ctx.datasetIndex===0) return ` Score: ${s.score} (${s.count} int. × imp. ${s.imp+1})`;
+            return ` Interesados: ${s.count}`;
+          }
+        }}
+      },
+      scales:{
+        x:{...CD.scales.x},
+        y:{...CD.scales.y, ticks:{color:'#8892A4',font:{size:10}}}
+      }
+    }
+  });
+
+  // Predicción próximo cuatrimestre
+  // Para cada materia que NO está en la preinscripción actual,
+  // calcular cuántos alumnos podrían llegar si aprueban lo que se preinscribieron ahora
+  const currentIds = new Set(Object.keys(data));
+  const predBody = document.getElementById('pi-prediction-body');
+  predBody.innerHTML = '';
+
+  const predictions = [];
+  CATALOG.forEach(subj => {
+    const prereqsNeeded = PREREQS[subj.id] || [];
+    if(!prereqsNeeded.length) return; // sin correlativas no es interesante predecir
+    if(currentIds.has(subj.id)) return; // ya está en esta preinscripción
+
+    // Demanda proyectada = interesados en TODAS las correlativas necesarias (mínimo)
+    // (quienes pasan todas las correlativas podrían querer esta materia)
+    const prereqCounts = prereqsNeeded.map(pid => data[pid] || 0);
+    if(prereqCounts.every(c=>c>0)) {
+      const projected = Math.min(...prereqCounts); // cota conservadora
+      if(projected > 0) {
+        predictions.push({ subj, prereqsNeeded, projected });
+      }
+    }
+  });
+
+  predictions.sort((a,b)=>b.projected-a.projected).slice(0,15).forEach(p=>{
+    const prereqNames = p.prereqsNeeded.map(pid=>{
+      const pc = CATALOG.find(c=>c.id===pid);
+      return `${pc?.name.split(' ')[0]||pid} (${data[pid]||0})`;
+    }).join(', ');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:600;color:var(--text-primary);">${p.subj.name}</td>
+      <td class="td-mono">A${p.subj.year}</td>
+      <td>
+        <span class="td-mono" style="font-weight:700;color:var(--teal);">≥ ${p.projected}</span>
+        <span style="font-size:.7rem;color:var(--text-muted);"> alumnos estimados</span>
+      </td>
+      <td style="font-size:.78rem;color:var(--text-muted);">${prereqNames}</td>
+    `;
+    predBody.appendChild(tr);
+  });
+
+  if(!predictions.length) {
+    predBody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="icon">📊</div><p>No hay suficientes datos para proyectar.</p></div></td></tr>`;
+  }
+}
+
+// ================================================================
+//  INIT
+// ================================================================
+window.onload = async function() {
+    buildSubjectSelector();
+    await fetchStudents();
+    await fetchSemesters();
+    renderAll();
+
+    document.getElementById('studentName').addEventListener('keydown', e=>{
+        if(e.key==='Enter') saveStudent();
+    });
+    document.getElementById('studentName').addEventListener('input', ()=>updateTrayBanner());
+    document.getElementById('coordPin').addEventListener('keydown', e=>{
+        if(e.key==='Enter') unlockCoord();
+    });
+    document.querySelectorAll('.modal-overlay').forEach(m=>{
+        m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('active'); });
+    });
+};
+</script>
+</body>
+</html>
