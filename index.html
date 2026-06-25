@@ -1054,10 +1054,14 @@ async function fetchStudents() {
 async function fetchSemesters() {
     try {
         const r = await fetch(`${API}/semesters`);
-        if(!r.ok) return;
+        if(!r.ok) throw new Error(r.status);
         const d = await r.json();
         semesters = d.semesters || [];
-    } catch {}
+    } catch(e) {
+        console.warn('fetchSemesters error:', e);
+        // No mostramos toast para no molestar en cada carga,
+        // pero sí dejamos semesters como estaba (no lo vaciamos)
+    }
 }
 
 async function pushStudents() {
@@ -1068,9 +1072,18 @@ async function pushStudents() {
             body: JSON.stringify({students})
         });
         if(!r.ok) throw new Error(r.status);
+        // Confirmar que el servidor devolvió el conteo correcto
+        const d = await r.json();
+        if(d.count !== undefined && d.count !== students.length) {
+            console.warn('Discrepancia entre local y servidor:', students.length, 'vs', d.count);
+        }
+        setDbStatus('ok');
         toast('Datos guardados','success');
-    } catch {
+        return true;
+    } catch(err) {
         toast('Error al guardar. Revisá la conexión.','error');
+        setDbStatus('error');
+        return false;
     } finally { setSyncing(false); }
 }
 
@@ -1192,6 +1205,22 @@ function updateSignalPreview() {
 }
 
 // ================================================================
+//  CARGAR DATOS DE UN ALUMNO EXISTENTE EN EL FORMULARIO
+// ================================================================
+function loadStudentData(name) {
+    const student = students.find(s=>s.name===name);
+    if(!student) return;
+    // Limpiar selección actual
+    selectedIds.clear();
+    // Cargar las materias aprobadas del alumno
+    (student.approved||[]).forEach(s=>selectedIds.add(s.id));
+    // Reconstruir el selector con los checkboxes marcados
+    buildSubjectSelector();
+    updateTrayBanner();
+    toast(`Datos de ${name} cargados`, 'info');
+}
+
+// ================================================================
 //  GUARDAR ALUMNO
 // ================================================================
 async function saveStudent() {
@@ -1202,9 +1231,11 @@ async function saveStudent() {
     const idx = students.findIndex(s=>s.name===name);
     if(idx!==-1) students[idx].approved = approved;
     else students.push({name, approved});
-    await pushStudents();
-    await fetchStudents();
-    renderAll();
+    const ok = await pushStudents();
+    if(ok) {
+        // Actualizar UI local sin necesidad de refetch
+        renderAll();
+    }
 }
 
 // ================================================================
@@ -1276,10 +1307,17 @@ function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 
 async function deleteStudent(name) {
     students = students.filter(s=>s.name!==name);
-    await pushStudents();
-    await fetchStudents();
-    renderAll();
-    toast(`${name} eliminado`,'info');
+    const ok = await pushStudents();
+    if(ok) {
+        // Si el alumno borrado era el del formulario, limpiar checkboxes
+        const currentName = document.getElementById('studentName').value.trim();
+        if(currentName === name) {
+            selectedIds.clear();
+            buildSubjectSelector();
+        }
+        renderAll();
+        toast(`${name} eliminado`,'info');
+    }
 }
 
 // ================================================================
@@ -2340,13 +2378,30 @@ window.onload = async function() {
     document.getElementById('studentName').addEventListener('keydown', e=>{
         if(e.key==='Enter') saveStudent();
     });
-    document.getElementById('studentName').addEventListener('input', ()=>updateTrayBanner());
+    document.getElementById('studentName').addEventListener('input', ()=>{
+        const name = document.getElementById('studentName').value.trim();
+        // Si el nombre coincide exactamente con un alumno existente, precargar sus datos
+        const existing = students.find(s=>s.name===name);
+        if(existing) loadStudentData(name);
+        else updateTrayBanner();
+    });
     document.getElementById('coordPin').addEventListener('keydown', e=>{
         if(e.key==='Enter') unlockCoord();
     });
     document.querySelectorAll('.modal-overlay').forEach(m=>{
         m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('active'); });
     });
+
+    // Polling liviano: refrescar datos cada 30 segundos para ver alumnos nuevos sin recargar
+    setInterval(async () => {
+        const prev = students.length;
+        const prevSem = semesters.length;
+        await fetchStudents();
+        await fetchSemesters();
+        if(students.length !== prev || semesters.length !== prevSem) {
+            renderAll();
+        }
+    }, 30000);
 };
 </script>
 </body>
