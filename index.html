@@ -395,7 +395,7 @@
     <button class="tab-btn active" onclick="switchTab('tab-student')">Mi avance</button>
     <button class="tab-btn" onclick="switchTab('tab-analysis')">Análisis grupal</button>
     <button class="tab-btn" onclick="switchTab('tab-coord')">Coordinación</button>
-    <button class="tab-btn" onclick="switchTab('tab-oferta');renderOfertaDemanda()">Oferta vs Demanda</button>
+    <button class="tab-btn" onclick="switchTab('tab-oferta');updateSemesterSelector();renderOfertaDemanda()">Oferta vs Demanda</button>
     <button class="tab-btn" onclick="switchTab('tab-preinsc');renderPreinsc()">Preinscripción</button>
 </nav>
 
@@ -1480,9 +1480,11 @@ async function saveSemester() {
     else semesters.push({label,offered});
     await pushSemesters();
     renderSemesters();
-    // Reset
+    updateSemesterSelector();
+    updateTrayBanner();
     document.getElementById('semLabel').value='';
     document.querySelectorAll('[id^=semcb-]').forEach(cb=>cb.checked=false);
+    toast(`Oferta ${label} guardada (${offered.length} materias)`,'success');
 }
 
 function renderSemesters() {
@@ -1514,6 +1516,8 @@ async function deleteSemester(label) {
     semesters = semesters.filter(s=>s.label!==label);
     await pushSemesters();
     renderSemesters();
+    updateSemesterSelector();
+    updateTrayBanner();
     toast(`Cuatrimestre ${label} eliminado`,'info');
 }
 
