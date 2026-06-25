@@ -276,7 +276,35 @@
         .tray-banner-title { font-size:0.75rem; font-weight:600; color:var(--teal); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:8px; }
         .tray-banner-empty { font-size:0.82rem; color:var(--text-muted); }
 
-        @media (max-width:900px) { .demand-grid { grid-template-columns:1fr 1fr; } .kpi-row-3 { grid-template-columns:1fr; } }
+        /* ── PREINSCRIPCIÓN ── */
+        .preinsc-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+        .preinsc-table th { padding:9px 12px; text-align:left; font-family:var(--mono); font-size:0.67rem; letter-spacing:.08em; color:var(--text-muted); text-transform:uppercase; border-bottom:1px solid var(--border); white-space:nowrap; }
+        .preinsc-table td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--text-secondary); vertical-align:middle; }
+        .preinsc-table tr:hover td { background:var(--bg-raised); }
+        .preinsc-table tr:last-child td { border-bottom:none; }
+        .score-bar-wrap { width:120px; height:6px; background:var(--border); border-radius:3px; overflow:hidden; display:inline-block; margin-left:8px; vertical-align:middle; }
+        .score-bar-fill { height:100%; border-radius:3px; }
+        .priority-badge { font-family:var(--mono); font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:4px; white-space:nowrap; }
+        .priority-critical { background:rgba(232,93,74,0.2);  color:var(--red); }
+        .priority-high     { background:rgba(232,197,71,0.2); color:var(--amber); }
+        .priority-medium   { background:rgba(62,201,167,0.2); color:var(--teal); }
+        .priority-low      { background:var(--bg-raised);     color:var(--text-muted); border:1px solid var(--border); }
+        .prereq-chain { display:flex; flex-wrap:wrap; gap:3px; }
+        .prereq-tag { font-size:0.65rem; padding:1px 6px; border-radius:3px; background:var(--bg-raised); border:1px solid var(--border); color:var(--text-muted); white-space:nowrap; }
+        .silent-warning { background:rgba(232,93,74,0.08); border:1px solid rgba(232,93,74,0.25); border-radius:var(--radius-md); padding:14px 18px; margin-bottom:16px; }
+        .silent-warning-title { font-size:0.75rem; font-weight:600; color:var(--red); letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px; }
+        .silent-warning p { font-size:0.82rem; color:var(--text-secondary); margin:0; line-height:1.5; }
+        .csv-input-wrap { background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; margin-bottom:20px; }
+        .csv-input-wrap textarea { width:100%; background:var(--bg-base); border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; border-radius:var(--radius-sm); font-family:var(--mono); font-size:0.78rem; resize:vertical; min-height:120px; }
+        .csv-input-wrap textarea:focus { border-color:var(--amber); outline:none; }
+        .preinsc-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+
+        /* ── CORRELATIVAS EN SIDEBAR ── */
+        .prereq-status { font-size:0.72rem; color:var(--text-muted); margin-top:3px; }
+        .prereq-status.ok   { color:var(--teal); }
+        .prereq-status.fail { color:var(--red); }
+
+        @media (max-width:900px) { .preinsc-kpi-row { grid-template-columns:1fr 1fr; } }
         @media (max-width:640px) { .demand-grid { grid-template-columns:1fr; } }
         @media (max-width:1100px) {
             .split-layout { grid-template-columns:1fr; }
@@ -346,6 +374,7 @@
     <button class="tab-btn" onclick="switchTab('tab-analysis')">Análisis grupal</button>
     <button class="tab-btn" onclick="switchTab('tab-coord')">Coordinación</button>
     <button class="tab-btn" onclick="switchTab('tab-oferta');renderOfertaDemanda()">Oferta vs Demanda</button>
+    <button class="tab-btn" onclick="switchTab('tab-preinsc');renderPreinsc()">Preinscripción</button>
 </nav>
 
 <!-- ════════════════════════════════════════════
@@ -669,6 +698,143 @@
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════
+     TAB 5: PREINSCRIPCIÓN
+════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-preinsc">
+  <div class="main-content" style="padding:28px 32px; flex-direction:column; gap:24px;">
+
+    <!-- KPIs -->
+    <div class="preinsc-kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Total inscripciones</div>
+        <div class="kpi-value" id="pi-total">—</div>
+        <div class="kpi-sub">Suma de interesados por materia</div>
+        <div class="kpi-accent"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Materias con demanda</div>
+        <div class="kpi-value" id="pi-materias">—</div>
+        <div class="kpi-sub">De 44 totales</div>
+        <div class="kpi-accent"></div>
+      </div>
+      <div class="kpi teal">
+        <div class="kpi-label">Mayor demanda</div>
+        <div class="kpi-value" id="pi-top">—</div>
+        <div class="kpi-sub" id="pi-top-name">—</div>
+        <div class="kpi-accent"></div>
+      </div>
+      <div class="kpi teal">
+        <div class="kpi-label">Cuello silencioso crítico</div>
+        <div class="kpi-value" id="pi-silent">—</div>
+        <div class="kpi-sub" id="pi-silent-name">interesados, alto impacto</div>
+        <div class="kpi-accent"></div>
+      </div>
+    </div>
+
+    <!-- Carga de datos -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Cargar preinscripción</span>
+        <span class="card-badge" id="pi-cuatrimestre-badge">Sin datos</span>
+      </div>
+      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">
+        Pegá el CSV exportado desde Google Sheets. Formato esperado: <code style="font-family:var(--mono);background:var(--bg-raised);padding:1px 5px;border-radius:3px;">cuatrimestre,materia,cantidad</code> — una fila por materia.
+        También podés pegar directamente dos columnas (materia,cantidad) y el sistema las mapea.
+      </p>
+      <div class="csv-input-wrap">
+        <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap;">
+          <div class="form-field" style="margin:0;">
+            <label>Cuatrimestre</label>
+            <input type="text" class="input-text" id="pi-label" placeholder="Ej: 2026-C2" style="width:150px;">
+          </div>
+          <button class="btn btn-teal" onclick="parsePreinscCSV()">Importar y guardar</button>
+          <button class="btn btn-ghost" onclick="loadExamplePreinsc()">Cargar ejemplo 2Q2026</button>
+        </div>
+        <textarea id="pi-csv-input" placeholder="Pegá el CSV acá...
+Ejemplos válidos:
+Análisis Matemático II,68
+Álgebra II,61
+Física I,47
+..."></textarea>
+      </div>
+    </div>
+
+    <!-- Contenido análisis -->
+    <div id="pi-content" style="display:none;flex-direction:column;gap:24px;">
+
+      <!-- Alertas de cuellos silenciosos -->
+      <div id="pi-silent-alerts"></div>
+
+      <!-- Tabla principal: Score de Prioridad Institucional -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Score de Prioridad Institucional</span>
+          <span class="card-badge">Demanda × Impacto de bloqueo</span>
+        </div>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">
+          Ordena las materias por el impacto real de no abrirlas. Una materia con 10 interesados e impacto 8 es más urgente que una con 40 interesados e impacto 0.
+          <span style="color:var(--red);">■ Crítico</span> &nbsp;
+          <span style="color:var(--amber);">■ Alto</span> &nbsp;
+          <span style="color:var(--teal);">■ Medio</span>
+        </p>
+        <div style="overflow-x:auto;">
+          <table class="preinsc-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Materia</th>
+                <th>Año</th>
+                <th>Interesados</th>
+                <th>Impacto</th>
+                <th>Score</th>
+                <th>Prioridad</th>
+                <th>Correlativas</th>
+              </tr>
+            </thead>
+            <tbody id="pi-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Gráfico top 15 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Score de prioridad — Top 15</span>
+          <span class="card-badge">Visualización</span>
+        </div>
+        <div class="chart-wrap" style="height:340px;"><canvas id="pi-chart"></canvas></div>
+      </div>
+
+      <!-- Predicción próximo cuatrimestre -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Proyección de demanda — próximo cuatrimestre</span>
+          <span class="card-badge">Basado en correlativas</span>
+        </div>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">
+          Materias que tendrán demanda el próximo cuatrimestre: alumnos que <strong style="color:var(--text-secondary);">actualmente están preinscriptos</strong> en las correlativas de cada materia.
+          Si aprueban, estarán en condiciones de cursar estas materias a continuación.
+        </p>
+        <div style="overflow-x:auto;">
+          <table class="preinsc-table">
+            <thead>
+              <tr>
+                <th>Materia (próximo cuatrimestre)</th>
+                <th>Año</th>
+                <th>Demanda proyectada</th>
+                <th>Viene de</th>
+              </tr>
+            </thead>
+            <tbody id="pi-prediction-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <footer style="padding:18px 32px;border-top:1px solid var(--border);text-align:center;font-size:0.72rem;color:var(--text-muted);letter-spacing:0.05em;">
     UNTREF · Ingeniería de Sonido · Procesamiento de Señales aplicado a la gestión académica
 </footer>
@@ -724,6 +890,71 @@ const CATALOG = [
   {id:"tesis",                 name:"Trabajo de Tesis",                                  year:5, sem:2},
 ];
 
+// Grafo de correlativas — extraído del Plan de Estudios 2006 (pp. 32-33)
+const PREREQS = {
+  "computacion":            [],
+  "fisica_i":               [],
+  "analisis_mat_i":         [],
+  "ingles_basico":          [],
+  "algebra_i":              [],
+  "historia_sxx":           [],
+  "intro_acustica":         [],
+  "fisica_ii":              ["fisica_i"],
+  "analisis_mat_ii":        ["analisis_mat_i"],
+  "grabacion_i":            ["intro_acustica"],
+  "ingles_tecnico":         ["ingles_basico"],
+  "algebra_ii":             ["algebra_i"],
+  "cultura_contemporanea":  [],
+  "sociologia":             [],
+  "taller_mundo":           [],
+  "analisis_mat_iii":       ["analisis_mat_ii"],
+  "electricidad":           ["fisica_ii","analisis_mat_ii"],
+  "dibujo_tecnico":         ["algebra_i"],
+  "acustica_i":             ["fisica_ii","analisis_mat_ii","intro_acustica"],
+  "probabilidad":           ["analisis_mat_ii"],
+  "lab_electronica_i":      ["electricidad"],
+  "senales_sistemas":       ["algebra_ii","analisis_mat_iii"],
+  "grabacion_ii":           ["grabacion_i"],
+  "administracion":         ["sociologia","metodologia"],
+  "lab_electronica_ii":     ["lab_electronica_i","analisis_mat_ii"],
+  "acustica_ii":            ["acustica_i","senales_sistemas","electricidad"],
+  "proc_digital":           ["acustica_ii","senales_sistemas"],
+  "circuitos_i":            ["lab_electronica_ii","analisis_mat_iii"],
+  "electroacustica_i":      ["lab_electronica_ii","acustica_ii"],
+  "grabacion_iii":          ["grabacion_ii"],
+  "legislacion":            ["administracion"],
+  "electroacustica_ii":     ["electroacustica_i"],
+  "comunicaciones":         ["lab_electronica_ii","senales_sistemas"],
+  "mediciones_acusticas":   ["acustica_ii","electroacustica_ii"],
+  "mastering":              ["grabacion_iii"],
+  "circuitos_ii":           ["circuitos_i"],
+  "audio_digital":          ["proc_digital"],
+  "lab_acustica":           ["mediciones_acusticas","circuitos_i"],
+  "ruido_acustico":         ["acustica_ii","mediciones_acusticas"],
+  "sonido_vivo":            ["electroacustica_ii"],
+  "practica_profesional":   ["grabacion_iii","proc_digital","electroacustica_ii","metodologia"],
+  "mediciones_electronicas":["circuitos_ii","comunicaciones"],
+  "tesis":                  ["mediciones_electronicas","lab_acustica","metodologia"],
+  "metodologia":            [],
+  "mediciones_acusticas":   ["acustica_ii","electroacustica_ii"],
+};
+
+// Calcula profundidad de la cadena de impacto (cuántas materias bloquea aguas abajo)
+function impactDepth(mid, visited) {
+  if(!visited) visited = new Set();
+  if(visited.has(mid)) return 0;
+  visited.add(mid);
+  const deps = CATALOG.filter(s=>( PREREQS[s.id]||[]).includes(mid));
+  if(!deps.length) return 0;
+  return 1 + Math.max(...deps.map(s=>impactDepth(s.id, new Set(visited))));
+}
+
+// Materias habilitadas para un alumno (correlativas cumplidas, no aprobadas aún)
+function habilitadas(approvedSet) {
+  return CATALOG.filter(s => !approvedSet.has(s.id) &&
+    (PREREQS[s.id]||[]).every(r => approvedSet.has(r)));
+}
+
 const YEAR_TOTALS = [1,2,3,4,5].map(y => CATALOG.filter(s=>s.year===y).length); // [15,8,7,7,7]
 const TOTAL_IDEAL = YEAR_TOTALS.reduce((a,b)=>a+b,0); // 44
 const IDEAL = YEAR_TOTALS;
@@ -733,9 +964,11 @@ const YEAR_COLORS = ['#c9a830','#2fa888','#63B3ED','#B794F4','#FC814A'];
 //  ESTADO GLOBAL
 // ================================================================
 const API = '/api';
-let students  = [];   // [{name, approved:[{id,name,year}]}]
-let semesters = [];   // [{label, offered:[{id,name,year}]}]
-let selectedIds = new Set();  // IDs seleccionados en el formulario del alumno
+let students  = [];
+let semesters = [];
+let preinscData = {}; // { label, data: {id: count} }
+let piChart = null;
+let selectedIds = new Set();
 let coordUnlocked = false;
 let pendingAction = null;
 
@@ -773,7 +1006,7 @@ function switchTab(id) {
     document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    const idx = ['tab-student','tab-analysis','tab-coord','tab-oferta'].indexOf(id);
+    const idx = ['tab-student','tab-analysis','tab-coord','tab-oferta','tab-preinsc'].indexOf(id);
     document.querySelectorAll('.tab-btn')[idx].classList.add('active');
 }
 
@@ -1316,6 +1549,7 @@ function renderAll() {
     updateKPIs();
     updateSemesterSelector();
     updateTrayBanner();
+    renderPreinsc();
     if(coordUnlocked) renderSemesters();
 }
 
@@ -1572,6 +1806,365 @@ function renderOfertaDemanda() {
                     <div class="trayectoria-subjects">${chips}</div>
                 </div>`;
         });
+}
+
+// ================================================================
+//  FASE 4 — PREINSCRIPCIÓN + ANÁLISIS INSTITUCIONAL
+// ================================================================
+
+// Datos del 2Q2026 precargados como ejemplo
+const EXAMPLE_2Q2026 = `Análisis Matemático II,68
+Álgebra II,61
+Física I,47
+Dibujo Técnico Asistido por Computadora,31
+Acústica y Psicoacústica I,30
+Física II,29
+Laboratorio de Electrónica II,28
+Grabación I,25
+Computación,24
+Comunicaciones,23
+Administración Estratégica de Empresas,21
+Electroacústica II,21
+Grabación II,19
+Introducción a la Acústica y Psicoacústica,18
+Legislación y Recursos Humanos,17
+Inglés Técnico,16
+Electricidad y Magnetismo,16
+Laboratorio de Acústica,16
+Acústica y Psicoacústica II,15
+Probabilidad y Estadística,14
+Laboratorio de Electrónica I,14
+Metodología de la Investigación Científica,14
+Ruido Acústico,14
+Señales y Sistemas,13
+Sonido en Vivo,13
+Problemas de Historia del Siglo XX,12
+Trabajo de Tesis,12
+Mastering y Postproducción de Sonido,10
+Análisis Matemático I,9
+Procesamiento Digital de Señales,9
+Electroacústica I,9
+Circuitos Electrónicos II,9
+Instrumentos de Mediciones Electrónicas,9
+Audio Digital,7
+Inglés Básico,6
+Álgebra I,6
+Grabación III,6
+Cuestiones de Sociología Economía y Política,4
+Análisis Matemático III,4
+Cultura Contemporánea,3
+Taller Problemática del Mundo Contemporáneo,2
+Circuitos Electrónicos I,2`;
+
+// Mapa de nombres del PDF → IDs del catálogo
+const NAME_TO_ID = {
+  "análisis matemático ii": "analisis_mat_ii",
+  "algebra ii": "algebra_ii", "álgebra ii": "algebra_ii",
+  "fisica i": "fisica_i", "física i": "fisica_i",
+  "dibujo técnico asistido por computadora": "dibujo_tecnico",
+  "dibujo tecnico asistido por computadora": "dibujo_tecnico",
+  "acústica y psicoacústica i": "acustica_i",
+  "acustica y psicoacustica i": "acustica_i",
+  "física ii": "fisica_ii", "fisica ii": "fisica_ii",
+  "laboratorio de electrónica ii": "lab_electronica_ii",
+  "laboratorio de electronica ii": "lab_electronica_ii",
+  "grabación i": "grabacion_i", "grabacion i": "grabacion_i",
+  "computación": "computacion", "computacion": "computacion",
+  "comunicaciones": "comunicaciones",
+  "administración estratégica de empresas": "administracion",
+  "administracion estrategica de empresas": "administracion",
+  "electroacústica ii": "electroacustica_ii",
+  "electroacustica ii": "electroacustica_ii",
+  "grabación ii": "grabacion_ii", "grabacion ii": "grabacion_ii",
+  "introducción a la acústica y psicoacústica": "intro_acustica",
+  "introducción a acústica y psicoacústica": "intro_acustica",
+  "intro a la acústica y psicoacústica": "intro_acustica",
+  "legislación y recursos humanos": "legislacion",
+  "legislacion y recursos humanos": "legislacion",
+  "inglés técnico": "ingles_tecnico", "ingles tecnico": "ingles_tecnico",
+  "electricidad y magnetismo": "electricidad",
+  "laboratorio de acústica": "lab_acustica",
+  "laboratorio de acustica": "lab_acustica",
+  "acústica y psicoacústica ii": "acustica_ii",
+  "acustica y psicoacustica ii": "acustica_ii",
+  "probabilidad y estadística": "probabilidad",
+  "probabilidad y estadistica": "probabilidad",
+  "probabilidad y estadística i": "probabilidad",
+  "laboratorio de electrónica i": "lab_electronica_i",
+  "laboratorio de electronica i": "lab_electronica_i",
+  "metodología de la investigación científica": "metodologia",
+  "metodologia de investigación científica": "metodologia",
+  "metodologia de la investigacion cientifica": "metodologia",
+  "ruido acústico": "ruido_acustico", "ruido acustico": "ruido_acustico",
+  "señales y sistemas": "senales_sistemas", "senales y sistemas": "senales_sistemas",
+  "sonido en vivo": "sonido_vivo",
+  "problemas de historia del siglo xx": "historia_sxx",
+  "problemas de historia del sxx": "historia_sxx",
+  "trabajo de tesis": "tesis",
+  "mastering y postproducción de sonido": "mastering",
+  "mastering y post producción de sonido": "mastering",
+  "mastering y postproduccion de sonido": "mastering",
+  "análisis matemático i": "analisis_mat_i", "analisis matematico i": "analisis_mat_i",
+  "análisis matemático ii": "analisis_mat_ii", "analisis matematico ii": "analisis_mat_ii",
+  "análisis matemático iii": "analisis_mat_iii", "analisis matematico iii": "analisis_mat_iii",
+  "procesamiento digital de señales": "proc_digital",
+  "procesamiento digital de senales": "proc_digital",
+  "electroacústica i": "electroacustica_i", "electroacustica i": "electroacustica_i",
+  "circuitos electrónicos ii": "circuitos_ii", "circuitos electronicos ii": "circuitos_ii",
+  "instrumentos de mediciones electrónicas": "mediciones_electronicas",
+  "instrumentos y mediciones electronicas": "mediciones_electronicas",
+  "audio digital": "audio_digital",
+  "inglés básico": "ingles_basico", "ingles basico": "ingles_basico",
+  "álgebra i": "algebra_i", "algebra i": "algebra_i",
+  "grabación iii": "grabacion_iii", "grabacion iii": "grabacion_iii",
+  "cuestiones de sociología, economía y política": "sociologia",
+  "cuestiones de sociologia, economia y politica": "sociologia",
+  "cuestiones de sociología economía y política": "sociologia",
+  "cuestiones de sociologia economia y politica": "sociologia",
+  "cultura contemporánea": "cultura_contemporanea",
+  "cultura contemporanea": "cultura_contemporanea",
+  "taller problemática del mundo contemporáneo": "taller_mundo",
+  "taller de introducción a la problemática del mundo contemporáneo": "taller_mundo",
+  "circuitos electrónicos i": "circuitos_i", "circuitos electronicos i": "circuitos_i",
+  "práctica profesional": "practica_profesional",
+  "instrumentos y mediciones acústicas": "mediciones_acusticas",
+  "instrumentos y mediciones acusticas": "mediciones_acusticas",
+};
+
+function nameToId(raw) {
+  const clean = raw.trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")  // quitar tildes
+    .replace(/[.,]/g,'');
+  // Buscar con y sin tildes
+  const raw_lower = raw.trim().toLowerCase();
+  if(NAME_TO_ID[raw_lower]) return NAME_TO_ID[raw_lower];
+  if(NAME_TO_ID[clean]) return NAME_TO_ID[clean];
+  // Fuzzy: buscar por inclusión parcial
+  for(const [k,v] of Object.entries(NAME_TO_ID)) {
+    if(k.includes(clean) || clean.includes(k)) return v;
+  }
+  return null;
+}
+
+function loadExamplePreinsc() {
+  document.getElementById('pi-label').value = '2026-C2';
+  document.getElementById('pi-csv-input').value = EXAMPLE_2Q2026;
+  toast('Datos de ejemplo 2Q2026 cargados — presioná "Importar y guardar"','info');
+}
+
+function parsePreinscCSV() {
+  const label = document.getElementById('pi-label').value.trim();
+  const raw   = document.getElementById('pi-csv-input').value.trim();
+  if(!label) { toast('Indicá el cuatrimestre','error'); return; }
+  if(!raw)   { toast('Pegá los datos CSV primero','error'); return; }
+
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const data  = {};
+  const unmapped = [];
+
+  lines.forEach(line => {
+    // Separar por última coma (para nombres con comas)
+    const lastComma = line.lastIndexOf(',');
+    if(lastComma === -1) return;
+    const namePart  = line.slice(0, lastComma).trim();
+    const countPart = line.slice(lastComma+1).trim();
+    const count = parseInt(countPart);
+    if(isNaN(count)) return;
+    const id = nameToId(namePart);
+    if(id) data[id] = count;
+    else unmapped.push(namePart);
+  });
+
+  if(Object.keys(data).length === 0) {
+    toast('No se pudo mapear ninguna materia. Verificá el formato.','error'); return;
+  }
+
+  preinscData = { label, data };
+  // Guardar en localStorage como cache local (no sube al servidor — es dato del coordinador)
+  try { localStorage.setItem('preinsc_data', JSON.stringify(preinscData)); } catch {}
+
+  if(unmapped.length) {
+    toast(`Importado con ${Object.keys(data).length} materias. ${unmapped.length} sin mapear: ${unmapped.slice(0,3).join(', ')}${unmapped.length>3?'…':''}`, 'info', 6000);
+  } else {
+    toast(`${Object.keys(data).length} materias importadas correctamente`, 'success');
+  }
+  renderPreinsc();
+}
+
+function renderPreinsc() {
+  // Intentar recuperar desde cache si no hay datos en memoria
+  if(!preinscData.data) {
+    try {
+      const cached = localStorage.getItem('preinsc_data');
+      if(cached) preinscData = JSON.parse(cached);
+    } catch {}
+  }
+
+  const content = document.getElementById('pi-content');
+  if(!preinscData.data || Object.keys(preinscData.data).length === 0) {
+    content.style.display='none'; return;
+  }
+  content.style.display='flex';
+
+  const data = preinscData.data;
+  const label = preinscData.label || '';
+  document.getElementById('pi-cuatrimestre-badge').textContent = label;
+  document.getElementById('pi-label').value = label;
+
+  const total = Object.values(data).reduce((a,b)=>a+b,0);
+  const matCount = Object.keys(data).length;
+  const topEntry = Object.entries(data).sort((a,b)=>b[1]-a[1])[0];
+  const topCat = CATALOG.find(c=>c.id===topEntry[0]);
+
+  document.getElementById('pi-total').textContent = total;
+  document.getElementById('pi-materias').textContent = matCount;
+  document.getElementById('pi-top').textContent = topEntry[1];
+  document.getElementById('pi-top-name').textContent = topCat ? topCat.name.split(' ').slice(0,3).join(' ')+'…' : topEntry[0];
+
+  // Score = demanda × (impacto + 1)
+  const scored = Object.entries(data).map(([id, count]) => {
+    const imp   = impactDepth(id);
+    const score = count * (imp + 1);
+    const cat   = CATALOG.find(c=>c.id===id);
+    const prereqs = PREREQS[id] || [];
+    return { id, count, imp, score, cat, prereqs };
+  }).sort((a,b)=>b.score-a.score);
+
+  const maxScore = scored[0]?.score || 1;
+
+  // KPI cuello silencioso: baja demanda declarada pero alto impacto
+  const silent = scored.filter(s=>s.count<15 && s.imp>=6).sort((a,b)=>b.imp-a.imp)[0];
+  if(silent) {
+    document.getElementById('pi-silent').textContent = silent.count;
+    document.getElementById('pi-silent-name').textContent =
+      (silent.cat?.name||silent.id).split(' ').slice(0,3).join(' ')+'… imp:'+silent.imp;
+  }
+
+  // Alertas de cuellos silenciosos
+  const alerts = document.getElementById('pi-silent-alerts');
+  const silentAll = scored.filter(s=>s.count<15 && s.imp>=5);
+  if(silentAll.length) {
+    alerts.innerHTML = `
+      <div class="silent-warning">
+        <div class="silent-warning-title">⚠ Cuellos de botella silenciosos detectados</div>
+        <p>Las siguientes materias tienen <strong>baja demanda declarada pero alto impacto de bloqueo</strong>.
+        Si no se abren, bloquean cadenas largas aunque parezcan tener poco interés:</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
+          ${silentAll.map(s=>`<span class="priority-badge priority-critical" title="Impacto: ${s.imp}">${s.cat?.name||s.id} (${s.count} int., imp. ${s.imp})</span>`).join('')}
+        </div>
+      </div>`;
+  } else {
+    alerts.innerHTML = '';
+  }
+
+  // Tabla principal
+  const tbody = document.getElementById('pi-table-body');
+  tbody.innerHTML = '';
+  scored.forEach((s,i)=>{
+    const pct = Math.round(s.score/maxScore*100);
+    const pCls = s.score>maxScore*0.6?'priority-critical':s.score>maxScore*0.35?'priority-high':s.score>maxScore*0.15?'priority-medium':'priority-low';
+    const pLbl = s.score>maxScore*0.6?'Crítico':s.score>maxScore*0.35?'Alto':s.score>maxScore*0.15?'Medio':'Bajo';
+    const barColor = s.score>maxScore*0.6?'var(--red)':s.score>maxScore*0.35?'var(--amber)':'var(--teal)';
+    const prereqTags = s.prereqs.map(pid=>{
+      const pc = CATALOG.find(c=>c.id===pid);
+      return `<span class="prereq-tag">${pc?pc.name.split(' ')[0]:pid}</span>`;
+    }).join('');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="td-mono" style="color:var(--text-muted);">${i+1}</td>
+      <td style="font-weight:600;color:var(--text-primary);">${s.cat?.name||s.id}</td>
+      <td class="td-mono">A${s.cat?.year||'?'}</td>
+      <td class="td-mono" style="color:var(--text-primary);font-weight:600;">${s.count}</td>
+      <td class="td-mono">${s.imp}</td>
+      <td>
+        <span class="td-mono" style="font-weight:700;">${s.score}</span>
+        <span class="score-bar-wrap"><span class="score-bar-fill" style="width:${pct}%;background:${barColor};"></span></span>
+      </td>
+      <td><span class="priority-badge ${pCls}">${pLbl}</span></td>
+      <td><div class="prereq-chain">${prereqTags||'<span style="font-size:.7rem;color:var(--text-muted);">—</span>'}</div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Gráfico
+  const top15 = scored.slice(0,15);
+  if(piChart) piChart.destroy();
+  piChart = new Chart(document.getElementById('pi-chart'), {
+    type:'bar',
+    data:{
+      labels: top15.map(s=>(s.cat?.name||s.id).split(' ').slice(0,3).join(' ')),
+      datasets:[
+        { label:'Score (Demanda × Impacto)', data:top15.map(s=>s.score),
+          backgroundColor:top15.map(s=>s.score>maxScore*0.6?'rgba(232,93,74,0.75)':s.score>maxScore*0.35?'rgba(232,197,71,0.75)':'rgba(62,201,167,0.75)'),
+          borderColor:top15.map(s=>s.score>maxScore*0.6?'#E85D4A':s.score>maxScore*0.35?'#E8C547':'#3EC9A7'),
+          borderWidth:1, order:1 },
+        { label:'Interesados declarados', data:top15.map(s=>s.count),
+          backgroundColor:'rgba(255,255,255,0.08)', borderColor:'rgba(255,255,255,0.3)',
+          borderWidth:1, type:'bar', order:2 }
+      ]
+    },
+    options:{...CD, indexAxis:'y',
+      plugins:{...CD.plugins,
+        tooltip:{...CD.plugins.tooltip, callbacks:{
+          label: ctx=>{
+            const s=top15[ctx.dataIndex];
+            if(ctx.datasetIndex===0) return ` Score: ${s.score} (${s.count} int. × imp. ${s.imp+1})`;
+            return ` Interesados: ${s.count}`;
+          }
+        }}
+      },
+      scales:{
+        x:{...CD.scales.x},
+        y:{...CD.scales.y, ticks:{color:'#8892A4',font:{size:10}}}
+      }
+    }
+  });
+
+  // Predicción próximo cuatrimestre
+  // Para cada materia que NO está en la preinscripción actual,
+  // calcular cuántos alumnos podrían llegar si aprueban lo que se preinscribieron ahora
+  const currentIds = new Set(Object.keys(data));
+  const predBody = document.getElementById('pi-prediction-body');
+  predBody.innerHTML = '';
+
+  const predictions = [];
+  CATALOG.forEach(subj => {
+    const prereqsNeeded = PREREQS[subj.id] || [];
+    if(!prereqsNeeded.length) return; // sin correlativas no es interesante predecir
+    if(currentIds.has(subj.id)) return; // ya está en esta preinscripción
+
+    // Demanda proyectada = interesados en TODAS las correlativas necesarias (mínimo)
+    // (quienes pasan todas las correlativas podrían querer esta materia)
+    const prereqCounts = prereqsNeeded.map(pid => data[pid] || 0);
+    if(prereqCounts.every(c=>c>0)) {
+      const projected = Math.min(...prereqCounts); // cota conservadora
+      if(projected > 0) {
+        predictions.push({ subj, prereqsNeeded, projected });
+      }
+    }
+  });
+
+  predictions.sort((a,b)=>b.projected-a.projected).slice(0,15).forEach(p=>{
+    const prereqNames = p.prereqsNeeded.map(pid=>{
+      const pc = CATALOG.find(c=>c.id===pid);
+      return `${pc?.name.split(' ')[0]||pid} (${data[pid]||0})`;
+    }).join(', ');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:600;color:var(--text-primary);">${p.subj.name}</td>
+      <td class="td-mono">A${p.subj.year}</td>
+      <td>
+        <span class="td-mono" style="font-weight:700;color:var(--teal);">≥ ${p.projected}</span>
+        <span style="font-size:.7rem;color:var(--text-muted);"> alumnos estimados</span>
+      </td>
+      <td style="font-size:.78rem;color:var(--text-muted);">${prereqNames}</td>
+    `;
+    predBody.appendChild(tr);
+  });
+
+  if(!predictions.length) {
+    predBody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="icon">📊</div><p>No hay suficientes datos para proyectar.</p></div></td></tr>`;
+  }
 }
 
 // ================================================================
