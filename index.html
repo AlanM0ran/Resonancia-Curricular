@@ -147,39 +147,41 @@
 
         /* ── KPI ROW ── */
         .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
-        .kpi { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 20px; position:relative; overflow:hidden; transition:border-color 0.2s; }
+        .kpi { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px 22px; position:relative; overflow:hidden; transition:border-color 0.2s; }
         .kpi:hover { border-color:var(--border-focus); }
-        .kpi-label { font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
-        .kpi-value { font-family:var(--mono); font-size:1.75rem; font-weight:700; line-height:1; color:var(--amber); }
-        .kpi-sub   { font-size:0.7rem; color:var(--text-muted); margin-top:5px; }
+        .kpi-label { font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px; }
+        .kpi-value { font-family:var(--mono); font-size:2.1rem; font-weight:700; line-height:1; color:var(--amber); }
+        .kpi-sub   { font-size:0.72rem; color:var(--text-muted); margin-top:6px; }
         .kpi-accent { position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--amber); opacity:0.4; }
         .kpi.teal .kpi-value { color:var(--teal); }
         .kpi.teal .kpi-accent { background:var(--teal); }
 
         /* ── CARD ── */
-        .card { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:22px 24px; }
-        .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
-        .card-title { font-size:0.8rem; font-weight:600; letter-spacing:0.05em; color:var(--text-secondary); text-transform:uppercase; }
+        .card { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 26px; }
+        .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+        .card-title { font-size:0.82rem; font-weight:600; letter-spacing:0.05em; color:var(--text-secondary); text-transform:uppercase; }
         .card-badge { font-family:var(--mono); font-size:0.68rem; color:var(--text-muted); background:var(--bg-raised); border:1px solid var(--border); border-radius:4px; padding:3px 8px; }
 
         /* ── CHARTS ── */
-        .charts-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
-        .chart-wrap { position:relative; height:200px; }
-        .interpretation-chip { display:inline-flex; align-items:center; gap:8px; font-size:0.78rem; padding:8px 14px; border-radius:6px; margin-top:12px; background:var(--bg-raised); border:1px solid var(--border); color:var(--text-secondary); }
+        .charts-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+        .chart-wrap { position:relative; height:260px; }
+        .chart-wrap-tall { position:relative; height:320px; }
+        .interpretation-chip { display:inline-flex; align-items:center; gap:8px; font-size:0.8rem; padding:9px 14px; border-radius:6px; margin-top:14px; background:var(--bg-raised); border:1px solid var(--border); color:var(--text-secondary); }
         .interpretation-chip.ok     { border-color:rgba(62,201,167,0.4); background:var(--teal-dim); color:var(--teal); }
         .interpretation-chip.warn   { border-color:rgba(232,197,71,0.4); background:var(--amber-dim); color:var(--amber); }
         .interpretation-chip.danger { border-color:rgba(232,93,74,0.4);  background:var(--red-dim);  color:var(--red); }
 
         /* ── TABLE ── */
         .table-wrap { overflow-x:auto; }
-        table { width:100%; border-collapse:collapse; font-size:0.82rem; }
-        thead th { padding:10px 12px; text-align:left; font-family:var(--mono); font-size:0.67rem; letter-spacing:0.08em; color:var(--text-muted); text-transform:uppercase; border-bottom:1px solid var(--border); white-space:nowrap; }
-        tbody td { padding:11px 12px; border-bottom:1px solid var(--border); color:var(--text-secondary); transition:background 0.15s; }
+        table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+        thead th { padding:11px 14px; text-align:left; font-family:var(--mono); font-size:0.69rem; letter-spacing:0.08em; color:var(--text-muted); text-transform:uppercase; border-bottom:1px solid var(--border); white-space:nowrap; }
+        tbody td { padding:12px 14px; border-bottom:1px solid var(--border); color:var(--text-secondary); transition:background 0.15s; }
         tbody tr:hover td { background:var(--bg-raised); }
         tbody tr:last-child td { border-bottom:none; }
-        .td-name { font-weight:600; color:var(--text-primary); }
-        .td-mono { font-family:var(--mono); font-size:0.8rem; }
-        .q-chip { font-family:var(--mono); font-size:0.75rem; padding:2px 8px; border-radius:4px; font-weight:700; }
+        .td-name { font-weight:600; color:var(--text-primary); font-size:0.88rem; }
+        .td-mono { font-family:var(--mono); font-size:0.82rem; }
+        .q-chip { font-family:var(--mono); font-size:0.78rem; padding:3px 10px; border-radius:4px; font-weight:700; }
+        .q-chip.q-self { box-shadow: 0 0 0 2px var(--amber); }
         .q-high { background:rgba(62,201,167,0.15); color:var(--teal); }
         .q-mid  { background:rgba(232,197,71,0.15);  color:var(--amber); }
         .q-low  { background:rgba(232,93,74,0.15);   color:var(--red); }
@@ -532,7 +534,7 @@
                     <span class="card-title">Distribución de Q</span>
                     <span class="card-badge">Normal</span>
                 </div>
-                <div class="chart-wrap"><canvas id="normalChart"></canvas></div>
+                <div class="chart-wrap" style="height:280px;"><canvas id="normalChart"></canvas></div>
                 <div class="interpretation-chip" id="qInterpretation">Cargá alumnos para ver la distribución.</div>
             </div>
             <div class="card">
@@ -540,15 +542,15 @@
                     <span class="card-title">Q por alumno</span>
                     <span class="card-badge">Factor Q</span>
                 </div>
-                <div class="chart-wrap"><canvas id="qBarChart"></canvas></div>
-                <p style="font-size:0.7rem;color:var(--text-muted);margin-top:10px;">Q&gt;5 óptimo · Q 3–5 aceptable · Q&lt;3 irregular</p>
+                <div class="chart-wrap" style="height:280px;"><canvas id="qBarChart"></canvas></div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-top:12px;">Q&gt;5 óptimo · Q 3–5 aceptable · Q&lt;3 irregular · <span style="color:var(--amber);">borde ámbar = tu Q</span></p>
             </div>
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Demanda por año</span>
                     <span class="card-badge">Promedio grupal</span>
                 </div>
-                <div class="chart-wrap"><canvas id="demandChart"></canvas></div>
+                <div class="chart-wrap" style="height:280px;"><canvas id="demandChart"></canvas></div>
                 <p style="font-size:0.7rem;color:var(--text-muted);margin-top:10px;">
                     <span style="color:var(--amber);">■</span> Plan ideal &nbsp;
                     <span style="color:var(--teal);">■</span> Aprobadas promedio
@@ -562,7 +564,7 @@
                 <span class="card-title">Materias más aprobadas</span>
                 <span class="card-badge">Frecuencia grupal</span>
             </div>
-            <div class="chart-wrap" style="height:260px;"><canvas id="subjectFreqChart"></canvas></div>
+            <div class="chart-wrap" style="height:340px;"><canvas id="subjectFreqChart"></canvas></div>
         </div>
 
   </div>
@@ -770,10 +772,11 @@
         <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap;">
           <div class="form-field" style="margin:0;">
             <label>Cuatrimestre</label>
-            <input type="text" class="input-text" id="pi-label" placeholder="Ej: 2026-C2" style="width:150px;">
+            <input type="text" class="input-text" id="pi-label" placeholder="Ej: 2026-C1" style="width:150px;">
           </div>
           <button class="btn btn-teal" onclick="parsePreinscCSV()">Importar y guardar</button>
-          <button class="btn btn-ghost" onclick="loadExamplePreinsc()">Cargar ejemplo 2Q2026</button>
+          <button class="btn btn-ghost" onclick="loadExamplePreinsc('1Q2026')">Ejemplo 1Q2026</button>
+          <button class="btn btn-ghost" onclick="loadExamplePreinsc('2Q2026')">Ejemplo 2Q2026</button>
         </div>
         <textarea id="pi-csv-input" placeholder="Pegá el CSV acá...
 Ejemplos válidos:
@@ -1256,17 +1259,18 @@ function renderTable() {
         const m        = computeMetrics(approved);
         const qVal     = isFinite(m.q)?Math.min(m.q,20):0;
         const qClass   = qVal>5?'q-high':qVal>3?'q-mid':'q-low';
-        // Mostrar hasta 4 tags, resto como "+N más"
+        const isMe     = s.name === document.getElementById('studentName').value.trim();
         const preview  = approved.slice(0,4);
         const extra    = approved.length-4;
         const tags     = preview.map(sub=>`<span class="subject-tag y${sub.year}">${sub.name.split(' ')[0]}</span>`).join('')
                        + (extra>0?`<span class="subject-tag">+${extra} más</span>`:'');
         const tr = document.createElement('tr');
+        if(isMe) tr.style.cssText='background:rgba(232,197,71,0.05);border-left:2px solid var(--amber);';
         tr.innerHTML = `
-            <td class="td-name">${escHtml(s.name)}</td>
+            <td class="td-name">${escHtml(s.name)}${isMe?' <span style="font-family:var(--mono);font-size:0.65rem;color:var(--amber);font-weight:400;">· vos</span>':''}</td>
             <td class="td-mono" style="color:var(--text-primary);font-weight:600">${total}</td>
             <td class="td-mono">${pct}%</td>
-            <td><span class="q-chip ${qClass}">${qVal.toFixed(2)}</span></td>
+            <td><span class="q-chip ${qClass}${isMe?' q-self':''}">${qVal.toFixed(2)}</span></td>
             <td class="td-mono">${m.kl.toFixed(3)}</td>
             <td><div class="subject-tags">${tags}</div></td>
             <td style="white-space:nowrap;">
@@ -1368,9 +1372,16 @@ function buildSignal(data,sps=20){
 let chartNormal, chartQ, chartDemand, chartFreq;
 const CD = {
     responsive:true, maintainAspectRatio:false, animation:{duration:400},
-    plugins:{ legend:{labels:{color:'#8892A4',font:{size:10,family:"'JetBrains Mono'"}}},
-              tooltip:{backgroundColor:'#131926',borderColor:'#1E2A3D',borderWidth:1,titleColor:'#E4EAF4',bodyColor:'#8892A4',padding:10} },
-    scales:{ x:{grid:{color:'#1E2A3D'},ticks:{color:'#4A5568'}}, y:{grid:{color:'#1E2A3D'},ticks:{color:'#4A5568'},beginAtZero:true} }
+    plugins:{
+        legend:{labels:{color:'#8892A4',font:{size:12,family:"'JetBrains Mono'"}}},
+        tooltip:{backgroundColor:'#131926',borderColor:'#1E2A3D',borderWidth:1,
+                 titleColor:'#E4EAF4',bodyColor:'#8892A4',padding:12,
+                 titleFont:{size:12},bodyFont:{size:11}}
+    },
+    scales:{
+        x:{grid:{color:'#1E2A3D'},ticks:{color:'#8892A4',font:{size:11}}},
+        y:{grid:{color:'#1E2A3D'},ticks:{color:'#8892A4',font:{size:11}},beginAtZero:true}
+    }
 };
 
 function updateCharts() {
@@ -1406,17 +1417,36 @@ function updateCharts() {
         options:{...CD,plugins:{...CD.plugins,legend:{display:false}}}
     });
 
-    // Q por alumno
+    // Q por alumno — con resaltado del alumno actual
+    const currentName = document.getElementById('studentName').value.trim();
     const qLabels = students.map(s=>s.name.split(' ')[0]);
     const qData   = metrics.map(m=>isFinite(m.q)?Math.min(m.q,20):0);
+    const isCurrent = students.map(s=>s.name===currentName);
     if(chartQ) chartQ.destroy();
     chartQ = new Chart(document.getElementById('qBarChart'),{
         type:'bar', data:{ labels:qLabels,
             datasets:[{data:qData,
-                backgroundColor:qData.map(v=>v>5?'rgba(62,201,167,0.7)':v>3?'rgba(232,197,71,0.7)':'rgba(232,93,74,0.7)'),
-                borderColor:qData.map(v=>v>5?'#3EC9A7':v>3?'#E8C547':'#E85D4A'),borderWidth:1}]},
-        options:{...CD,plugins:{...CD.plugins,legend:{display:false}},
-                 scales:{...CD.scales,x:{...CD.scales.x,ticks:{color:'#4A5568',maxRotation:35}}}}
+                backgroundColor:qData.map((v,i)=>isCurrent[i]
+                    ? 'rgba(232,197,71,0.9)'
+                    : v>5?'rgba(62,201,167,0.55)':v>3?'rgba(232,197,71,0.45)':'rgba(232,93,74,0.55)'),
+                borderColor:qData.map((v,i)=>isCurrent[i]
+                    ? '#E8C547'
+                    : v>5?'#3EC9A7':v>3?'#E8C547':'#E85D4A'),
+                borderWidth:qData.map((_,i)=>isCurrent[i]?3:1)
+            }]},
+        options:{...CD,
+            plugins:{...CD.plugins,
+                legend:{display:false},
+                tooltip:{...CD.plugins.tooltip,callbacks:{
+                    label: ctx=>{
+                        const q=qData[ctx.dataIndex];
+                        const tag=isCurrent[ctx.dataIndex]?' (vos)':'';
+                        return ` Q: ${q.toFixed(2)}${tag}`;
+                    }
+                }}
+            },
+            scales:{...CD.scales,x:{...CD.scales.x,ticks:{color:'#8892A4',maxRotation:35,font:{size:11}}}}
+        }
     });
 
     // Demanda por año
@@ -2012,6 +2042,50 @@ function renderOfertaDemanda() {
 // ================================================================
 
 // Datos del 2Q2026 precargados como ejemplo
+const EXAMPLE_1Q2026 = `Problemas de Historia del sXX,8
+Cuestiones de Sociologia Economia y Politica,5
+Inglés Básico,2
+Inglés Técnico,3
+Computación,19
+Administración Estratégica de Empresas,1
+Dibujo Técnico Asistido por Computadora,11
+Análisis Matemático I,11
+Análisis Matemático II,34
+Análisis Matemático III,17
+Álgebra I,3
+Álgebra II,15
+Probabilidad y Estadística,19
+Física I,22
+Física II,32
+Introducción a Acústica y Psicoacústica,18
+Electricidad y Magnetismo,10
+Grabación I,25
+Grabación II,31
+Grabación III,24
+Laboratorio de Electrónica I,30
+Laboratorio de Electrónica II,3
+Acústica y Psicoacústica I,11
+Acústica y Psicoacústica II,11
+Señales y Sistemas,23
+Procesamiento Digital de Señales,23
+Electroacústica I,25
+Circuitos Electrónicos I,26
+Comunicaciones,3
+Circuitos Electrónicos II,9
+Legislación y Recursos Humanos,2
+Audio Digital,8
+Electroacústica II,2
+Instrumentos y Mediciones Acústicas,7
+Mastering y Postproducción de Sonido,12
+Metodología de Investigación Científica,5
+Sonido en Vivo,3
+Ruido Acústico,1
+Laboratorio de Acústica,2
+Práctica Profesional,14
+Instrumentos de Mediciones Electrónicas,11
+Trabajo de Tesis,11`;
+
+// Datos 2Q2026 (histórico)
 const EXAMPLE_2Q2026 = `Análisis Matemático II,68
 Álgebra II,61
 Física I,47
@@ -2145,10 +2219,11 @@ function nameToId(raw) {
   return null;
 }
 
-function loadExamplePreinsc() {
-  document.getElementById('pi-label').value = '2026-C2';
-  document.getElementById('pi-csv-input').value = EXAMPLE_2Q2026;
-  toast('Datos de ejemplo 2Q2026 cargados — presioná "Importar y guardar"','info');
+function loadExamplePreinsc(which) {
+  const isQ1 = which === '1Q2026';
+  document.getElementById('pi-label').value = isQ1 ? '2026-C1' : '2026-C2';
+  document.getElementById('pi-csv-input').value = isQ1 ? EXAMPLE_1Q2026 : EXAMPLE_2Q2026;
+  toast(`Datos de ejemplo ${isQ1?'1Q2026':'2Q2026'} cargados — presioná "Importar y guardar"`, 'info');
 }
 
 function parsePreinscCSV() {
