@@ -1,11 +1,10 @@
 {
-  "functions": {
-    "apistudents.py": {
-      "runtime": "@vercel/python"
-    }
-  },
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "/apistudents.py" },
-    { "source": "/:path*",     "destination": "/index.html" }
+  "builds": [
+    { "src": "apistudents.py", "use": "@vercel/python" },
+    { "src": "index.html",     "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "apistudents.py" },
+    { "src": "/(.*)",     "dest": "index.html" }
   ]
 }
