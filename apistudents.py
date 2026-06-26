@@ -1,13 +1,13 @@
 import json
 import os
-from fastapi import FastAPI, HTTPException
+import base64
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
 from upstash_redis import Redis
-from pydantic import BaseModel
-from typing import Optional
 
-app = FastAPI(title="API Estudiantes — Ing. en Sonido UNTREF")
+app = FastAPI(title="Resonancia Curricular API — UNTREF")
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,112 +16,125 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Catálogo ─────────────────────────────────────────────────────────
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-with open(os.path.join(BASE_DIR, "catalog.json"), encoding="utf-8") as f:
-    CATALOG = json.load(f)
-
-VALID_SUBJECTS = {s["id"] for s in CATALOG["subjects"]}
-NUM_SEMESTERS  = len({(s["year"], s["semester"]) for s in CATALOG["subjects"]})
+STUDENTS_KEY  = "students"
+SEMESTERS_KEY = "semesters"
 
 
 def get_redis() -> Redis:
-    return Redis.from_env()
+    url   = (os.environ.get("KV_REST_API_URL")
+          or os.environ.get("KV_URL")
+          or os.environ.get("UPSTASH_REDIS_REST_URL"))
+    token = (os.environ.get("KV_REST_API_TOKEN")
+          or os.environ.get("UPSTASH_REDIS_REST_TOKEN"))
+    return Redis(url=url, token=token)
 
 
-# ── Models ────────────────────────────────────────────────────────────
+def check_coord_auth(request: Request) -> bool:
+    """Valida el header Authorization: Basic coord:<password>"""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Basic "):
+        return False
+    try:
+        decoded  = base64.b64decode(auth[6:]).decode("utf-8")
+        _, password = decoded.split(":", 1)
+        expected = os.environ.get("COORD_PASSWORD", "admin")
+        return password == expected
+    except Exception:
+        return False
 
-class Student(BaseModel):
-    legajo: str
-    nombre: str
-    email: Optional[str] = None
 
-
-class SubjectUpdate(BaseModel):
-    estado: str               # "aprobada" | "cursando" | "pendiente"
-    nota: Optional[float] = None
-
-
-# ── Routes ────────────────────────────────────────────────────────────
+# ── Status ─────────────────────────────────────────────────────────
 
 @app.get("/api/status")
-def status():
-    r = get_redis()
-    url_var = os.environ.get("STORAGE_URL") or os.environ.get("UPSTASH_REDIS_REST_URL")
+def get_status():
+    url_var = (os.environ.get("KV_REST_API_URL")
+            or os.environ.get("KV_URL")
+            or os.environ.get("UPSTASH_REDIS_REST_URL"))
+    students_count  = 0
+    semesters_count = 0
     try:
-        count = len(r.keys("student:*") or [])
+        r = get_redis()
+        raw_s = r.get(STUDENTS_KEY)
+        if raw_s:
+            students_count = len(json.loads(raw_s))
+        raw_sem = r.get(SEMESTERS_KEY)
+        if raw_sem:
+            semesters_count = len(json.loads(raw_sem))
     except Exception:
-        count = 0
+        pass
     return {
         "status": "ok",
-        "kv": True,
-        "url_var_found": "STORAGE_URL" if url_var else None,
-        "students": count,
-        "semesters": NUM_SEMESTERS,
+        "kv": bool(url_var),
+        "url_var_found": "KV_REST_API_URL" if url_var else None,
+        "students": students_count,
+        "semesters": semesters_count,
     }
 
 
-@app.get("/api/catalog")
-def get_catalog():
-    return CATALOG
-
+# ── Alumnos ────────────────────────────────────────────────────────
 
 @app.get("/api/students")
-def list_students():
+def get_students():
+    """Devuelve { students: [...] }"""
     r = get_redis()
-    keys = r.keys("student:*") or []
-    return [json.loads(r.get(k)) for k in keys if r.get(k)]
+    try:
+        raw = r.get(STUDENTS_KEY)
+        students = json.loads(raw) if raw else []
+    except Exception:
+        students = []
+    return {"students": students}
 
 
-@app.post("/api/students", status_code=201)
-def create_student(student: Student):
+@app.post("/api/students")
+async def save_students(request: Request):
+    """
+    Recibe { students: [...] } y reemplaza toda la lista.
+    Devuelve { ok, count }.
+    """
+    r    = get_redis()
+    body = await request.json()
+    students = body.get("students", [])
+    r.set(STUDENTS_KEY, json.dumps(students, ensure_ascii=False))
+    return {"ok": True, "count": len(students)}
+
+
+@app.delete("/api/students")
+def delete_all_students():
+    """Borra todos los alumnos."""
     r = get_redis()
-    key = f"student:{student.legajo}"
-    if r.exists(key):
-        raise HTTPException(status_code=409, detail="El legajo ya existe")
-    r.set(key, json.dumps(student.dict()))
-    return student
+    r.delete(STUDENTS_KEY)
+    return {"ok": True}
 
 
-@app.get("/api/students/{legajo}")
-def get_student(legajo: str):
+# ── Cuatrimestres ──────────────────────────────────────────────────
+
+@app.get("/api/semesters")
+def get_semesters():
+    """Devuelve { semesters: [...] }"""
     r = get_redis()
-    raw = r.get(f"student:{legajo}")
-    if not raw:
-        raise HTTPException(status_code=404, detail="Estudiante no encontrado")
-    return json.loads(raw)
+    try:
+        raw = r.get(SEMESTERS_KEY)
+        semesters = json.loads(raw) if raw else []
+    except Exception:
+        semesters = []
+    return {"semesters": semesters}
 
 
-@app.delete("/api/students/{legajo}", status_code=204)
-def delete_student(legajo: str):
-    r = get_redis()
-    if not r.exists(f"student:{legajo}"):
-        raise HTTPException(status_code=404, detail="Estudiante no encontrado")
-    r.delete(f"student:{legajo}")
-    # Limpiar progreso asociado
-    for key in r.keys(f"progress:{legajo}:*") or []:
-        r.delete(key)
+@app.post("/api/semesters")
+async def save_semesters(request: Request):
+    """
+    Requiere Authorization: Basic coord:<COORD_PASSWORD>.
+    Recibe { semesters: [...] } y reemplaza la oferta.
+    Devuelve 401 si la contraseña es incorrecta.
+    """
+    if not check_coord_auth(request):
+        raise HTTPException(status_code=401, detail="Contraseña incorrecta")
+    r    = get_redis()
+    body = await request.json()
+    semesters = body.get("semesters", [])
+    r.set(SEMESTERS_KEY, json.dumps(semesters, ensure_ascii=False))
+    return {"ok": True, "count": len(semesters)}
 
 
-@app.put("/api/students/{legajo}/materias/{subject_id}")
-def update_materia(legajo: str, subject_id: str, body: SubjectUpdate):
-    r = get_redis()
-    if not r.exists(f"student:{legajo}"):
-        raise HTTPException(status_code=404, detail="Estudiante no encontrado")
-    if subject_id not in VALID_SUBJECTS:
-        raise HTTPException(status_code=404, detail="Materia no encontrada en el catálogo")
-    r.set(f"progress:{legajo}:{subject_id}", json.dumps(body.dict()))
-    return {"ok": True, "legajo": legajo, "subject_id": subject_id, **body.dict()}
-
-
-@app.get("/api/students/{legajo}/progress")
-def get_progress(legajo: str):
-    r = get_redis()
-    if not r.exists(f"student:{legajo}"):
-        raise HTTPException(status_code=404, detail="Estudiante no encontrado")
-    keys = r.keys(f"progress:{legajo}:*") or []
-    return {k.split(":")[-1]: json.loads(r.get(k)) for k in keys if r.get(k)}
-
-
-# ── Handler requerido por el runtime Python de Vercel ────────────────
+# ── Handler requerido por Vercel ────────────────────────────────────
 handler = Mangum(app)
