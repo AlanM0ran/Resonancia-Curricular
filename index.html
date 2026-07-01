@@ -477,8 +477,8 @@
                             <th>Alumno</th>
                             <th>Aprobadas</th>
                             <th>%</th>
-                            <th>Q</th>
-                            <th>KL div.</th>
+                            <th>Wasserstein ↓</th>
+                            <th>IAC ↑</th>
                             <th>Materias</th>
                             <th></th>
                         </tr>
@@ -503,21 +503,21 @@
 
         <div class="kpi-row">
             <div class="kpi">
-                <div class="kpi-label">Media Q</div>
+                <div class="kpi-label">Wasserstein · Media</div>
                 <div class="kpi-value" id="kpiMeanQ">—</div>
-                <div class="kpi-sub">Coherencia temporal promedio</div>
+                <div class="kpi-sub">Distancia al perfil ideal (↓ mejor)</div>
                 <div class="kpi-accent"></div>
             </div>
             <div class="kpi">
-                <div class="kpi-label">Desv. Estándar Q</div>
+                <div class="kpi-label">Wasserstein · Desv. Std</div>
                 <div class="kpi-value" id="kpiStdQ">—</div>
                 <div class="kpi-sub">Dispersión entre alumnos</div>
                 <div class="kpi-accent"></div>
             </div>
             <div class="kpi teal">
-                <div class="kpi-label">KL Divergencia · Media</div>
+                <div class="kpi-label">IAC · Media grupal</div>
                 <div class="kpi-value" id="kpiMeanKL">—</div>
-                <div class="kpi-sub">vs. distribución ideal</div>
+                <div class="kpi-sub">Índice de Alcance Curricular (↑ mejor)</div>
                 <div class="kpi-accent"></div>
             </div>
             <div class="kpi teal">
@@ -528,22 +528,28 @@
             </div>
         </div>
 
+        <!-- Panel personal del alumno (Fase 6) -->
+        <div id="personalStatsPanel" style="display:none;">
+        </div>
+
         <div class="charts-row">
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Distribución de Q</span>
-                    <span class="card-badge">Normal</span>
+                    <span class="card-title">Distribución Wasserstein</span>
+                    <span class="card-badge">Distancia al ideal</span>
                 </div>
                 <div class="chart-wrap" style="height:280px;"><canvas id="normalChart"></canvas></div>
                 <div class="interpretation-chip" id="qInterpretation">Cargá alumnos para ver la distribución.</div>
             </div>
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Q por alumno</span>
-                    <span class="card-badge">Factor Q</span>
+                    <span class="card-title">IAC por decil</span>
+                    <span class="card-badge">Alcance curricular</span>
                 </div>
                 <div class="chart-wrap" style="height:280px;"><canvas id="qBarChart"></canvas></div>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin-top:12px;">Q&gt;5 óptimo · Q 3–5 aceptable · Q&lt;3 irregular · <span style="color:var(--amber);">borde ámbar = tu Q</span></p>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-top:12px;">
+                    Distribución del Índice de Alcance Curricular · <span style="color:var(--amber);">barra ámbar = tu decil</span>
+                </p>
             </div>
             <div class="card">
                 <div class="card-header">
@@ -1257,8 +1263,10 @@ function renderTable() {
         const total    = approved.length;
         const pct      = Math.round(total/TOTAL_IDEAL*100);
         const m        = computeMetrics(approved);
-        const qVal     = isFinite(m.q)?Math.min(m.q,20):0;
-        const qClass   = qVal>5?'q-high':qVal>3?'q-mid':'q-low';
+        const wassVal  = m.wass.toFixed(3);
+        const iacVal   = (m.iac*100).toFixed(1)+'%';
+        const wassColor = m.wass<0.3?'var(--teal)':m.wass<0.7?'var(--amber)':'var(--red)';
+        const iacColor  = m.iac>0.6?'var(--teal)':m.iac>0.3?'var(--amber)':'var(--red)';
         const isMe     = s.name === document.getElementById('studentName').value.trim();
         const preview  = approved.slice(0,4);
         const extra    = approved.length-4;
@@ -1270,8 +1278,8 @@ function renderTable() {
             <td class="td-name">${escHtml(s.name)}${isMe?' <span style="font-family:var(--mono);font-size:0.65rem;color:var(--amber);font-weight:400;">· vos</span>':''}</td>
             <td class="td-mono" style="color:var(--text-primary);font-weight:600">${total}</td>
             <td class="td-mono">${pct}%</td>
-            <td><span class="q-chip ${qClass}${isMe?' q-self':''}">${qVal.toFixed(2)}</span></td>
-            <td class="td-mono">${m.kl.toFixed(3)}</td>
+            <td class="td-mono" style="color:${wassColor};font-weight:600;">${wassVal}</td>
+            <td class="td-mono" style="color:${iacColor};font-weight:600;">${iacVal}</td>
             <td><div class="subject-tags">${tags}</div></td>
             <td style="white-space:nowrap;">
                 <button class="btn btn-ghost btn-sm" onclick='showDetail(${JSON.stringify(s.name)})'>Ver</button>
@@ -1325,44 +1333,91 @@ async function deleteStudent(name) {
 }
 
 // ================================================================
-//  MÉTRICAS (operan sobre array de {id,name,year})
+//  MÉTRICAS — FASE 6: Wasserstein Distance + IAC
+//  Reemplaza el Factor Q (FFT) y KL divergence
 // ================================================================
-function computeMetrics(approved) {
-    // Contar aprobadas por año
-    const byYear = IDEAL.map((_,i)=>approved.filter(s=>s.year===i+1).length);
-    const sig    = buildSignal(byYear, 20);
-    const idealSig = buildSignal(IDEAL, 20);
 
-    // Q — igual que antes
-    const N = sig.length;
-    const mags = [], freqs = [];
-    for(let k=0;k<N/2;k++){
-        let sR=0,sI=0;
-        for(let n=0;n<N;n++){ const a=2*Math.PI*k*n/N; sR+=sig[n]*Math.cos(a); sI-=sig[n]*Math.sin(a); }
-        mags.push(Math.sqrt(sR*sR+sI*sI));
-        freqs.push(k/5);
-    }
-    const energies=mags.map(m=>m*m), tot=energies.reduce((a,b)=>a+b,0);
-    let cum=0, ci=energies.length-1;
-    for(let i=0;i<energies.length;i++){ cum+=energies[i]; if(cum>=tot*0.5){ci=i;break;} }
-    const f_c=freqs[ci]||0.1, bw=2*f_c;
-    const q = bw===0?Infinity:1/bw;
+/**
+ * Wasserstein-1 Distance (Earth Mover's Distance) entre la distribución
+ * de materias aprobadas del alumno y la distribución ideal del plan.
+ *
+ * Ambas distribuciones se normalizan a suma=1.
+ * W1 = sum |CDF_alumno(i) - CDF_ideal(i)| para i = 1..5
+ *
+ * Rango: 0 (idéntico al ideal) a ~2 (completamente invertido).
+ * Más bajo es mejor. Respeta el orden de los años (geométrico).
+ *
+ * Ref: Villani, C. (2003). Topics in Optimal Transportation. AMS.
+ */
+function wassersteinDistance(approved) {
+    const byYear = IDEAL.map((_,i) => approved.filter(s=>s.year===i+1).length);
+    const totalApp = byYear.reduce((a,b)=>a+b, 0);
+    if(totalApp === 0) return 1.0; // sin datos: distancia máxima normalizada
 
-    // KL divergence vs ideal
-    const totalApp = byYear.reduce((a,b)=>a+b,0);
-    const p_ideal  = IDEAL.map(v=>v/TOTAL_IDEAL);
-    const p_data   = byYear.map(v=>totalApp===0?1/5:v/totalApp);
-    let kl=0;
-    for(let i=0;i<5;i++){
-        if(p_ideal[i]>0&&p_data[i]>0) kl+=p_ideal[i]*Math.log(p_ideal[i]/p_data[i]);
-        else if(p_ideal[i]>0) kl+=100;
+    // Distribuciones normalizadas
+    const p = byYear.map(v => v / totalApp);
+    const q = IDEAL.map(v => v / TOTAL_IDEAL);
+
+    // CDF de cada distribución
+    let cdfP = 0, cdfQ = 0, w1 = 0;
+    for(let i=0; i<5; i++){
+        cdfP += p[i];
+        cdfQ += q[i];
+        w1 += Math.abs(cdfP - cdfQ);
     }
-    return {byYear, total:totalApp, pct:totalApp/TOTAL_IDEAL*100, q, kl};
+    return w1; // [0, 4] en teoría, normalizado a [0,1] para display
 }
 
-function buildSignal(data,sps=20){
-    const sig=new Array(5*sps).fill(0);
-    for(let i=0;i<5;i++) for(let j=i*sps;j<(i+1)*sps;j++) sig[j]=data[i]||0;
+/**
+ * IAC — Índice de Alcance Curricular
+ *
+ * Mide qué fracción del potencial de avance ya tiene habilitado el alumno,
+ * ponderando cada materia habilitada por su valor de desbloqueo futuro.
+ *
+ * IAC = sum(peso_i para i en habilitadas) / sum(peso_i para TODAS las materias)
+ * donde peso_i = impactDepth(i) + 1
+ *
+ * Rango: 0 (sin ninguna materia habilitada) a 1 (todo habilitado).
+ * Más alto = mejor posición para avanzar.
+ *
+ * Analogía con betweenness centrality (Freeman, 1977) aplicada a grafos
+ * de prerrequisitos curriculares.
+ */
+function computeIAC(approvedSet) {
+    const totalWeight = CATALOG.reduce((a,s) => a + impactDepth(s.id) + 1, 0);
+    if(totalWeight === 0) return 0;
+    const unlockedWeight = CATALOG
+        .filter(s => !approvedSet.has(s.id) &&
+            (PREREQS[s.id]||[]).every(r => approvedSet.has(r)))
+        .reduce((a,s) => a + impactDepth(s.id) + 1, 0);
+    return unlockedWeight / totalWeight;
+}
+
+/**
+ * Función principal de métricas. Devuelve todas las estadísticas de un alumno.
+ * Mantiene compatibilidad con el código que llama a .byYear, .total, .pct.
+ */
+function computeMetrics(approved) {
+    const byYear   = IDEAL.map((_,i) => approved.filter(s=>s.year===i+1).length);
+    const total    = byYear.reduce((a,b)=>a+b, 0);
+    const pct      = total / TOTAL_IDEAL * 100;
+    const approvedSet = new Set(approved.map(s=>s.id));
+
+    const wass = wassersteinDistance(approved);
+    const iac  = computeIAC(approvedSet);
+
+    // Mantener q y kl como aliases numéricos para no romper código existente
+    // q = (1 - wass/4) * 10  => escala 0-10, más alto mejor (invertimos Wasserstein)
+    // kl = wass (alias semántico)
+    const q  = Math.max(0, (1 - wass / 4) * 10);
+    const kl = wass;
+
+    return { byYear, total, pct, wass, iac, q, kl };
+}
+
+function buildSignal(data, sps=20){
+    const sig = new Array(5*sps).fill(0);
+    for(let i=0; i<5; i++) for(let j=i*sps; j<(i+1)*sps; j++) sig[j] = data[i]||0;
     return sig;
 }
 
@@ -1385,118 +1440,212 @@ const CD = {
 };
 
 function updateCharts() {
-    if(!students.length){ [chartNormal,chartQ,chartDemand,chartFreq].forEach(c=>{if(c)c.destroy()}); return; }
-
-    const metrics = students.map(s=>computeMetrics(s.approved||[]));
-    const qVals   = metrics.map(m=>m.q).filter(v=>isFinite(v)&&v<100);
-    if(!qVals.length) return;
-    const mean = qVals.reduce((a,b)=>a+b,0)/qVals.length;
-    const std  = Math.sqrt(qVals.reduce((a,b)=>a+(b-mean)**2,0)/qVals.length)||0.01;
-    window._qStats = {mean,std};
-
-    // Distribución Q
-    const bins=10, minQ=Math.min(...qVals), maxQ=Math.max(...qVals);
-    const bw=(maxQ-minQ)/bins||1;
-    const hist=new Array(bins).fill(0);
-    qVals.forEach(v=>hist[Math.min(bins-1,Math.floor((v-minQ)/bw))]++);
-    const hLabels=hist.map((_,i)=>(minQ+i*bw).toFixed(1));
-    const step=(maxQ-minQ)/80||0.1;
-    const normalPts=[], normalVals=[];
-    for(let x=minQ-std;x<=maxQ+std;x+=step){
-        normalPts.push(x);
-        normalVals.push(Math.exp(-0.5*((x-mean)/std)**2)/(std*Math.sqrt(2*Math.PI)));
+    if(!students.length){
+        [chartNormal,chartQ,chartDemand,chartFreq].forEach(c=>{if(c)c.destroy()});
+        chartNormal=chartQ=chartDemand=chartFreq=null;
+        return;
     }
-    const scale=Math.max(...hist)/Math.max(...normalVals)||1;
+
+    const metrics     = students.map(s=>computeMetrics(s.approved||[]));
+    const wassVals    = metrics.map(m=>m.wass);
+    const iacVals     = metrics.map(m=>m.iac);
+    const mean        = wassVals.reduce((a,b)=>a+b,0)/wassVals.length;
+    const std         = Math.sqrt(wassVals.reduce((a,b)=>a+(b-mean)**2,0)/wassVals.length)||0.01;
+    window._qStats    = {mean, std};
+
+    // Alumno actual para resaltado
+    const currentName = document.getElementById('studentName').value.trim();
+    const currentIdx  = students.findIndex(s=>s.name===currentName);
+    const myWass      = currentIdx>=0 ? wassVals[currentIdx] : null;
+    const myIAC       = currentIdx>=0 ? iacVals[currentIdx]  : null;
+
+    // ── GRÁFICO 1: Histograma Wasserstein con línea del alumno ──────
+    const bins = 12;
+    const minW = 0, maxW = Math.min(4, Math.max(...wassVals) * 1.1 || 1);
+    const bw   = (maxW - minW) / bins;
+    const hist = new Array(bins).fill(0);
+    wassVals.forEach(v => hist[Math.min(bins-1, Math.floor((v-minW)/bw))]++);
+    const hLabels = hist.map((_,i) => (minW + i*bw).toFixed(2));
+
+    // Anotación de la línea del alumno actual
+    const myBin = myWass!=null ? Math.min(bins-1, Math.floor((myWass-minW)/bw)) : -1;
+    const bgColors = hist.map((_,i) => i===myBin
+        ? 'rgba(232,197,71,0.85)' : 'rgba(62,201,167,0.35)');
+    const bdColors = hist.map((_,i) => i===myBin ? '#E8C547' : 'rgba(62,201,167,0.8)');
+
     if(chartNormal) chartNormal.destroy();
     chartNormal = new Chart(document.getElementById('normalChart'),{
         type:'bar', data:{ labels:hLabels,
-            datasets:[
-                {label:'Frecuencia',data:hist,backgroundColor:'rgba(62,201,167,0.3)',borderColor:'rgba(62,201,167,0.8)',borderWidth:1,order:2},
-                {label:'Normal',data:normalPts.map((_,i)=>normalVals[i]*scale),type:'line',borderColor:'#E8C547',backgroundColor:'rgba(232,197,71,0.06)',borderWidth:2,pointRadius:0,fill:true,tension:0.4,order:1}
-            ]},
-        options:{...CD,plugins:{...CD.plugins,legend:{display:false}}}
-    });
-
-    // Q por alumno — con resaltado del alumno actual
-    const currentName = document.getElementById('studentName').value.trim();
-    const qLabels = students.map(s=>s.name.split(' ')[0]);
-    const qData   = metrics.map(m=>isFinite(m.q)?Math.min(m.q,20):0);
-    const isCurrent = students.map(s=>s.name===currentName);
-    if(chartQ) chartQ.destroy();
-    chartQ = new Chart(document.getElementById('qBarChart'),{
-        type:'bar', data:{ labels:qLabels,
-            datasets:[{data:qData,
-                backgroundColor:qData.map((v,i)=>isCurrent[i]
-                    ? 'rgba(232,197,71,0.9)'
-                    : v>5?'rgba(62,201,167,0.55)':v>3?'rgba(232,197,71,0.45)':'rgba(232,93,74,0.55)'),
-                borderColor:qData.map((v,i)=>isCurrent[i]
-                    ? '#E8C547'
-                    : v>5?'#3EC9A7':v>3?'#E8C547':'#E85D4A'),
-                borderWidth:qData.map((_,i)=>isCurrent[i]?3:1)
+            datasets:[{
+                label:'Alumnos',data:hist,
+                backgroundColor:bgColors,borderColor:bdColors,borderWidth:1.5
             }]},
         options:{...CD,
             plugins:{...CD.plugins,
                 legend:{display:false},
                 tooltip:{...CD.plugins.tooltip,callbacks:{
-                    label: ctx=>{
-                        const q=qData[ctx.dataIndex];
-                        const tag=isCurrent[ctx.dataIndex]?' (vos)':'';
-                        return ` Q: ${q.toFixed(2)}${tag}`;
-                    }
+                    title: ctx=>`Wasserstein ${ctx[0].label}–${(+ctx[0].label+bw).toFixed(2)}`,
+                    label: ctx=>`${ctx.raw} alumno${ctx.raw!==1?'s':''}${myBin===ctx.dataIndex?' ← vos':''}`
                 }}
-            },
-            scales:{...CD.scales,x:{...CD.scales.x,ticks:{color:'#8892A4',maxRotation:35,font:{size:11}}}}
+            }
         }
     });
 
-    // Demanda por año
+    // ── GRÁFICO 2: IAC por decil (escalable a 300+ alumnos) ─────────
+    const N_DECILES = 10;
+    const sorted_iac = [...iacVals].sort((a,b)=>a-b);
+    const decileCounts = new Array(N_DECILES).fill(0);
+    const decileLabels = Array.from({length:N_DECILES},(_,i)=>`D${i+1}`);
+    iacVals.forEach(v => {
+        const d = Math.min(N_DECILES-1, Math.floor(v * N_DECILES));
+        decileCounts[d]++;
+    });
+    // Decil del alumno actual
+    let myDecile = -1;
+    if(myIAC!=null) myDecile = Math.min(N_DECILES-1, Math.floor(myIAC * N_DECILES));
+    const iacBg = decileCounts.map((_,i) => i===myDecile
+        ? 'rgba(232,197,71,0.85)' : 'rgba(183,148,244,0.45)');
+    const iacBd = decileCounts.map((_,i) => i===myDecile ? '#E8C547' : '#B794F4');
+
+    if(chartQ) chartQ.destroy();
+    chartQ = new Chart(document.getElementById('qBarChart'),{
+        type:'bar', data:{ labels:decileLabels,
+            datasets:[{label:'Alumnos', data:decileCounts,
+                backgroundColor:iacBg, borderColor:iacBd, borderWidth:1.5}]},
+        options:{...CD,
+            plugins:{...CD.plugins,
+                legend:{display:false},
+                tooltip:{...CD.plugins.tooltip,callbacks:{
+                    title: ctx=>`Decil ${ctx[0].label} (IAC ${(ctx[0].dataIndex/10).toFixed(1)}–${((ctx[0].dataIndex+1)/10).toFixed(1)})`,
+                    label: ctx=>`${ctx.raw} alumno${ctx.raw!==1?'s':''}${myDecile===ctx.dataIndex?' ← vos':''}`
+                }}
+            }
+        }
+    });
+
+    // ── GRÁFICO 3: Aprobadas promedio vs ideal por año ───────────────
     const avgByYear = IDEAL.map((_,i)=>metrics.reduce((a,m)=>a+m.byYear[i],0)/metrics.length);
     if(chartDemand) chartDemand.destroy();
     chartDemand = new Chart(document.getElementById('demandChart'),{
         type:'bar', data:{ labels:['Año 1','Año 2','Año 3','Año 4','Año 5'],
             datasets:[
                 {label:'Plan ideal',data:IDEAL,backgroundColor:'rgba(232,197,71,0.6)',borderColor:'#E8C547',borderWidth:1},
-                {label:'Aprobadas promedio',data:avgByYear,backgroundColor:'rgba(62,201,167,0.5)',borderColor:'#3EC9A7',borderWidth:1}
+                {label:'Promedio real',data:avgByYear,backgroundColor:'rgba(62,201,167,0.5)',borderColor:'#3EC9A7',borderWidth:1}
             ]},
         options:{...CD}
     });
 
-    // Frecuencia de materias
+    // ── GRÁFICO 4: Materias más aprobadas (top 15) ───────────────────
     const freq={};
     students.forEach(s=>(s.approved||[]).forEach(sub=>{ freq[sub.id]=(freq[sub.id]||0)+1; }));
-    const sorted = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,15);
-    const fLabels = sorted.map(([id])=>{ const s=CATALOG.find(c=>c.id===id); return s?s.name.split(' ').slice(0,2).join(' '):id; });
-    const fData   = sorted.map(([,n])=>n);
-    const fColors = sorted.map(([id])=>{ const s=CATALOG.find(c=>c.id===id); return s?YEAR_COLORS[s.year-1]:'#4A5568'; });
+    const sortedFreq = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    const fLabels = sortedFreq.map(([id])=>{ const s=CATALOG.find(c=>c.id===id); return s?s.name.split(' ').slice(0,3).join(' '):id; });
+    const fData   = sortedFreq.map(([,n])=>n);
+    const fColors = sortedFreq.map(([id])=>{ const s=CATALOG.find(c=>c.id===id); return s?YEAR_COLORS[s.year-1]:'#4A5568'; });
     if(chartFreq) chartFreq.destroy();
     chartFreq = new Chart(document.getElementById('subjectFreqChart'),{
         type:'bar', data:{ labels:fLabels,
             datasets:[{data:fData,backgroundColor:fColors.map(c=>c+'99'),borderColor:fColors,borderWidth:1}]},
         options:{...CD,indexAxis:'y',plugins:{...CD.plugins,legend:{display:false}},
-                 scales:{x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,stepSize:1}},y:{...CD.scales.y,ticks:{color:'#8892A4',font:{size:10}}}}}
+                 scales:{x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,stepSize:1}},
+                         y:{...CD.scales.y,ticks:{color:'#8892A4',font:{size:11}}}}}
     });
+
+    // Actualizar panel personal si hay alumno cargado
+    updatePersonalStatsPanel(metrics, wassVals, iacVals, myWass, myIAC, currentName);
 }
 
 function updateKPIs() {
     if(!students.length){
         ['kpiMeanQ','kpiStdQ','kpiMeanKL','kpiAvgPct'].forEach(id=>document.getElementById(id).textContent='—');
-        const ch=document.getElementById('qInterpretation'); ch.className='interpretation-chip'; ch.textContent='Cargá alumnos para ver la distribución.';
+        const ch=document.getElementById('qInterpretation');
+        ch.className='interpretation-chip';
+        ch.textContent='Cargá alumnos para ver la distribución.';
+        const pp=document.getElementById('personalStatsPanel');
+        if(pp) pp.style.display='none';
         return;
     }
-    const metrics = students.map(s=>computeMetrics(s.approved||[]));
-    const qVals   = metrics.map(m=>m.q).filter(v=>isFinite(v)&&v<100);
-    const mean    = qVals.reduce((a,b)=>a+b,0)/qVals.length;
-    const std     = Math.sqrt(qVals.reduce((a,b)=>a+(b-mean)**2,0)/qVals.length);
-    const meanKL  = metrics.reduce((a,m)=>a+m.kl,0)/metrics.length;
-    const avgPct  = metrics.reduce((a,m)=>a+m.pct,0)/metrics.length;
-    document.getElementById('kpiMeanQ').textContent  = mean.toFixed(2);
-    document.getElementById('kpiStdQ').textContent   = std.toFixed(2);
-    document.getElementById('kpiMeanKL').textContent = meanKL.toFixed(3);
+    const metrics  = students.map(s=>computeMetrics(s.approved||[]));
+    const wassVals = metrics.map(m=>m.wass);
+    const iacVals  = metrics.map(m=>m.iac);
+    const meanW    = wassVals.reduce((a,b)=>a+b,0)/wassVals.length;
+    const stdW     = Math.sqrt(wassVals.reduce((a,b)=>a+(b-meanW)**2,0)/wassVals.length);
+    const meanIAC  = iacVals.reduce((a,b)=>a+b,0)/iacVals.length;
+    const avgPct   = metrics.reduce((a,m)=>a+m.pct,0)/metrics.length;
+
+    document.getElementById('kpiMeanQ').textContent  = meanW.toFixed(3);
+    document.getElementById('kpiStdQ').textContent   = stdW.toFixed(3);
+    document.getElementById('kpiMeanKL').textContent = (meanIAC*100).toFixed(1)+'%';
     document.getElementById('kpiAvgPct').textContent = avgPct.toFixed(0)+'%';
+
     const ch=document.getElementById('qInterpretation');
-    if(mean>5){ ch.className='interpretation-chip ok'; ch.textContent='✓ Alta coherencia — avance predecible y eficiente'; }
-    else if(mean>3){ ch.className='interpretation-chip warn'; ch.textContent='⚠ Coherencia moderada — cierta irregularidad en los progresos'; }
-    else { ch.className='interpretation-chip danger'; ch.textContent='✕ Baja coherencia — alta variabilidad, revisar plan de estudios'; }
+    if(meanW < 0.3){
+        ch.className='interpretation-chip ok';
+        ch.textContent='✓ El grupo se acerca bien al perfil ideal de avance';
+    } else if(meanW < 0.7){
+        ch.className='interpretation-chip warn';
+        ch.textContent='⚠ Distancia moderada al ideal — cierta irregularidad en el avance';
+    } else {
+        ch.className='interpretation-chip danger';
+        ch.textContent='✕ Alto desvío del perfil ideal — revisar distribución de cursadas';
+    }
+}
+
+/**
+ * Panel de estadísticas personales del alumno vs el grupo.
+ * Se muestra en el Tab Análisis cuando el alumno tiene nombre escrito y está en la base.
+ */
+function updatePersonalStatsPanel(metrics, wassVals, iacVals, myWass, myIAC, currentName) {
+    const panel = document.getElementById('personalStatsPanel');
+    if(!panel) return;
+
+    if(myWass==null || !currentName) {
+        panel.style.display='none';
+        return;
+    }
+
+    panel.style.display='block';
+
+    // Percentiles
+    const wassPercentile = Math.round(wassVals.filter(v=>v>myWass).length / wassVals.length * 100);
+    const iacPercentile  = Math.round(iacVals.filter(v=>v<myIAC).length  / iacVals.length  * 100);
+    const myMetric       = metrics[students.findIndex(s=>s.name===currentName)];
+    if(!myMetric) return;
+
+    const wassColor = myWass<0.3?'var(--teal)':myWass<0.7?'var(--amber)':'var(--red)';
+    const iacColor  = myIAC>0.6?'var(--teal)':myIAC>0.3?'var(--amber)':'var(--red)';
+
+    panel.innerHTML = `
+        <div style="background:var(--bg-raised);border:1px solid rgba(232,197,71,0.35);border-radius:var(--radius-md);padding:20px 24px;border-left:3px solid var(--amber);">
+            <div style="font-size:0.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:14px;">
+                Tu posición en el grupo · ${escHtml(currentName)}
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+                <div>
+                    <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Wasserstein</div>
+                    <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:${wassColor};">${myWass.toFixed(3)}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Mejor que el ${wassPercentile}% del grupo</div>
+                </div>
+                <div>
+                    <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">IAC</div>
+                    <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:${iacColor};">${(myIAC*100).toFixed(1)}%</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Percentil ${iacPercentile} de alcance</div>
+                </div>
+                <div>
+                    <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Avance</div>
+                    <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--text-primary);">${myMetric.pct.toFixed(0)}%</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">${myMetric.total} de ${TOTAL_IDEAL} materias</div>
+                </div>
+                <div>
+                    <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">vs promedio</div>
+                    <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:${myMetric.pct>=(metrics.reduce((a,m)=>a+m.pct,0)/metrics.length)?'var(--teal)':'var(--amber)'};">
+                        ${myMetric.pct >= (metrics.reduce((a,m)=>a+m.pct,0)/metrics.length) ? '↑' : '↓'}
+                        ${Math.abs(myMetric.pct - metrics.reduce((a,m)=>a+m.pct,0)/metrics.length).toFixed(0)}pp
+                    </div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">vs media grupal</div>
+                </div>
+            </div>
+        </div>`;
 }
 
 // ================================================================
