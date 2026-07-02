@@ -402,7 +402,18 @@
 <body>
 <div id="toast-container"></div>
 
-<!-- MODAL CONFIRMAR -->
+<!-- MODAL TARJETA PERSONAL (Fase 8) -->
+<div class="modal-overlay" id="shareModal">
+    <div class="modal modal-sm">
+        <h3 style="margin-bottom:4px;">Mi avance curricular</h3>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:16px;">Ingeniería de Sonido · UNTREF</p>
+        <div id="shareCardContent"></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal('shareModal')">Cerrar</button>
+            <button class="btn btn-primary" onclick="printShareCard()">Imprimir / PDF</button>
+        </div>
+    </div>
+</div>
 <div class="modal-overlay" id="confirmModal">
     <div class="modal modal-sm">
         <h3 id="modalTitle">¿Confirmar acción?</h3>
@@ -539,12 +550,26 @@
                 <div class="personal-name" id="personalNameDisplay">—</div>
                 <div class="personal-sub" id="personalSubDisplay">Seleccioná tus materias aprobadas</div>
             </div>
-            <button class="btn btn-primary" onclick="saveStudent()" id="saveBtn">
-                Guardar mis datos
-            </button>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-ghost btn-sm" onclick="shareStudentCard()" id="shareBtn" title="Compartir mi avance" style="display:none;">
+                    ↗ Compartir
+                </button>
+                <button class="btn btn-primary" onclick="saveStudent()" id="saveBtn">
+                    Guardar mis datos
+                </button>
+            </div>
           </div>
 
-          <!-- Stats personales (aparecen cuando hay datos guardados) -->
+          <!-- Materias aprobadas — PRIMERO para acción inmediata -->
+          <div class="subject-section">
+              <div class="subject-section-header">
+                  <span class="subject-section-title">Materias aprobadas</span>
+                  <span style="font-size:0.72rem;color:var(--text-muted);">Seleccioná las que ya tenés</span>
+              </div>
+              <div id="subjectSelector"></div>
+          </div>
+
+          <!-- Stats personales — aparecen cuando hay datos guardados -->
           <div id="personalStatsRow" style="display:none;">
             <div class="personal-stats">
                 <div class="pstat" id="pstatWass">
@@ -565,14 +590,6 @@
             </div>
           </div>
 
-          <!-- Panel de recomendaciones -->
-          <div id="recPanel" style="display:none;" class="rec-panel prediction-card">
-              <div id="recBlockAlerts"></div>
-              <p class="rec-panel-title">🎯 Tus mejores movidas este cuatrimestre</p>
-              <div id="recList"></div>
-              <div id="recUnlockable" style="margin-top:10px;"></div>
-          </div>
-
           <!-- PREDICCIÓN DE EGRESO (Fase 7) -->
           <div id="predictionCard" style="display:none;" class="prediction-card">
               <div class="prediction-title">📍 Tu camino al egreso</div>
@@ -588,13 +605,12 @@
               <div class="path-steps" id="criticalPath"></div>
           </div>
 
-          <!-- Materias aprobadas -->
-          <div class="subject-section">
-              <div class="subject-section-header">
-                  <span class="subject-section-title">Materias aprobadas</span>
-                  <span style="font-size:0.72rem;color:var(--text-muted);">Seleccioná las que ya tenés</span>
-              </div>
-              <div id="subjectSelector"></div>
+          <!-- Panel de recomendaciones — al final -->
+          <div id="recPanel" style="display:none;" class="rec-panel prediction-card">
+              <div id="recBlockAlerts"></div>
+              <p class="rec-panel-title">🎯 Tus mejores movidas este cuatrimestre</p>
+              <div id="recList"></div>
+              <div id="recUnlockable" style="margin-top:10px;"></div>
           </div>
 
         </div>
@@ -913,7 +929,12 @@
     <div class="card">
       <div class="card-header">
         <span class="card-title">Cargar preinscripción</span>
-        <span class="card-badge" id="pi-cuatrimestre-badge">Sin datos</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <span class="card-badge" id="pi-cuatrimestre-badge">Sin datos</span>
+            <button class="btn btn-teal btn-sm" onclick="exportInstitutionalReport()" id="reportBtn" style="display:none;">
+                ↗ Exportar reporte
+            </button>
+        </div>
       </div>
       <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">
         Pegá el CSV exportado desde Google Sheets. Formato esperado: <code style="font-family:var(--mono);background:var(--bg-raised);padding:1px 5px;border-radius:3px;">cuatrimestre,materia,cantidad</code> — una fila por materia.
@@ -1184,8 +1205,8 @@ function switchTab(id) {
     document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    const idx = ['tab-student','tab-analysis','tab-coord','tab-oferta','tab-preinsc'].indexOf(id);
-    document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+    const btn = document.querySelector(`.tab-btn[data-tab="${id}"]`);
+    if(btn) btn.classList.add('active');
 }
 
 // ================================================================
@@ -2569,10 +2590,14 @@ function renderPreinsc() {
   }
 
   const content = document.getElementById('pi-content');
+  const reportBtn = document.getElementById('reportBtn');
   if(!preinscData.data || Object.keys(preinscData.data).length === 0) {
-    content.style.display='none'; return;
+    content.style.display='none';
+    if(reportBtn) reportBtn.style.display='none';
+    return;
   }
   content.style.display='flex';
+  if(reportBtn) reportBtn.style.display='inline-flex';
 
   const data = preinscData.data;
   const label = preinscData.label || '';
@@ -2846,6 +2871,10 @@ function updateStudentPanel() {
     const approvedSet = new Set(approved.map(s => s.id));
     const m           = computeMetrics(approved);
 
+    // Botón compartir — solo cuando hay datos guardados
+    const shareBtn = document.getElementById('shareBtn');
+    if(shareBtn) shareBtn.style.display = student ? 'inline-flex' : 'none';
+
     document.getElementById('personalSubDisplay').textContent =
         `${approved.length} de ${TOTAL_IDEAL} materias aprobadas`;
 
@@ -2917,6 +2946,180 @@ function setProfileStatus(type, text) {
     const tx = document.getElementById('profileStatusText');
     el.className = `profile-status ${type}`;
     tx.textContent = text;
+}
+
+// ================================================================
+//  FASE 8 — EXPORTACIÓN + ACCESO DIFERENCIADO
+// ================================================================
+
+/**
+ * Genera y abre la tarjeta personal del alumno para compartir/imprimir.
+ */
+function shareStudentCard() {
+    const name = document.getElementById('studentName').value.trim();
+    const student = students.find(s=>s.name===name);
+    if(!student) return;
+
+    const approved    = student.approved || [];
+    const approvedSet = new Set(approved.map(s=>s.id));
+    const m           = computeMetrics(approved);
+    const { semesters } = computeMinPath(approvedSet);
+    const critical    = getCriticalSubjects(approvedSet);
+
+    // Percentiles vs el grupo
+    const allMetrics  = students.map(s=>computeMetrics(s.approved||[]));
+    const allWass     = allMetrics.map(x=>x.wass);
+    const allIAC      = allMetrics.map(x=>x.iac);
+    const wassPerc    = Math.round(allWass.filter(v=>v>m.wass).length/allWass.length*100);
+    const iacPerc     = Math.round(allIAC.filter(v=>v<m.iac).length/allIAC.length*100);
+
+    const byYearStr   = m.byYear.map((n,i)=>`Año ${i+1}: ${n}/${IDEAL[i]}`).join(' · ');
+    const critNames   = critical.map(s=>s.name).join(', ') || '—';
+    const today       = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+
+    const html = `
+        <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:12px;padding:20px;font-family:var(--sans);">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <div style="width:40px;height:40px;border-radius:50%;background:var(--amber-dim);border:2px solid var(--amber);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:var(--amber);font-size:0.9rem;">
+                    ${name.split(' ').slice(0,2).map(w=>w[0]).join('')}
+                </div>
+                <div>
+                    <div style="font-weight:700;color:var(--text-primary);font-size:0.95rem;">${escHtml(name)}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Ingeniería de Sonido · UNTREF · ${today}</div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+                <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;">
+                    <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--amber);">${m.pct.toFixed(0)}%</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;">Avance</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);">${m.total} de 44</div>
+                </div>
+                <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;">
+                    <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--teal);">${semesters}</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;">Cuatrimestres</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);">mínimos restantes</div>
+                </div>
+                <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;">
+                    <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--teal);">${iacPerc}°</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;">Percentil IAC</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);">en el grupo</div>
+                </div>
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px;">${byYearStr}</div>
+            <div style="font-size:0.72rem;color:var(--text-secondary);border-top:1px solid var(--border);padding-top:10px;margin-top:8px;">
+                <span style="color:var(--amber);">Próximo paso crítico:</span> ${escHtml(critNames)}
+            </div>
+            <div style="font-size:0.65rem;color:var(--text-muted);margin-top:10px;">
+                Wasserstein: ${m.wass.toFixed(3)} (mejor que el ${wassPerc}% del grupo) · IAC: ${(m.iac*100).toFixed(1)}%
+            </div>
+        </div>`;
+
+    document.getElementById('shareCardContent').innerHTML = html;
+    openModal('shareModal');
+}
+
+function printShareCard() {
+    const content = document.getElementById('shareCardContent').innerHTML;
+    const w = window.open('','_blank');
+    w.document.write(`<!DOCTYPE html><html><head><title>Resonancia Curricular</title>
+        <style>body{font-family:Inter,sans-serif;background:#080C14;color:#E4EAF4;padding:24px;margin:0;}
+        @media print{body{background:white;color:black;}}</style></head>
+        <body>${content}</body></html>`);
+    w.document.close();
+    w.print();
+}
+
+/**
+ * Exporta el reporte institucional de preinscripción como HTML imprimible.
+ */
+function exportInstitutionalReport() {
+    if(!preinscData.data) { toast('Cargá una preinscripción primero','error'); return; }
+
+    const data    = preinscData.data;
+    const label   = preinscData.label || '—';
+    const total   = Object.values(data).reduce((a,b)=>a+b,0);
+    const today   = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+
+    // Score de prioridad
+    const scored = Object.entries(data).map(([id,count])=>{
+        const imp  = impactDepth(id);
+        const cat  = CATALOG.find(c=>c.id===id);
+        return { id, name:cat?.name||id, year:cat?.year||'?', count, imp, score:count*(imp+1) };
+    }).sort((a,b)=>b.score-a.score);
+
+    const maxScore = scored[0]?.score||1;
+
+    // Cuellos silenciosos
+    const silent = scored.filter(s=>s.count<15&&s.imp>=5);
+
+    const rows = scored.map((s,i)=>`
+        <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:8px 10px;font-size:0.82rem;font-weight:600;">${i+1}</td>
+            <td style="padding:8px 10px;font-size:0.82rem;">${s.name}</td>
+            <td style="padding:8px 10px;font-size:0.82rem;text-align:center;">A${s.year}</td>
+            <td style="padding:8px 10px;font-size:0.82rem;text-align:center;font-weight:700;">${s.count}</td>
+            <td style="padding:8px 10px;font-size:0.82rem;text-align:center;">${s.imp}</td>
+            <td style="padding:8px 10px;font-size:0.82rem;text-align:center;font-weight:700;color:${s.score>maxScore*0.6?'#c0392b':s.score>maxScore*0.35?'#d48a00':'#27ae60'};">${s.score}</td>
+        </tr>`).join('');
+
+    const silentHtml = silent.length ? `
+        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:12px 16px;margin-bottom:20px;">
+            <strong style="color:#856404;">⚠ Cuellos de botella silenciosos</strong>
+            <p style="font-size:0.82rem;color:#856404;margin:6px 0 0;">
+                ${silent.map(s=>`${s.name} (${s.count} int., impacto ${s.imp})`).join(' · ')}
+            </p>
+        </div>` : '';
+
+    const html = `<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<title>Reporte Institucional — ${label}</title>
+<style>
+  body{font-family:Arial,sans-serif;color:#222;margin:0;padding:32px;max-width:900px;}
+  h1{font-size:1.4rem;margin-bottom:4px;}
+  h2{font-size:1rem;color:#555;margin:20px 0 10px;}
+  table{width:100%;border-collapse:collapse;font-size:0.82rem;}
+  thead{background:#f5f5f5;}
+  th{padding:10px;text-align:left;border-bottom:2px solid #ddd;font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;}
+  .meta{font-size:0.8rem;color:#888;margin-bottom:24px;}
+  .kpi-row{display:flex;gap:16px;margin-bottom:24px;}
+  .kpi{background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:14px 18px;min-width:120px;}
+  .kpi-val{font-size:1.6rem;font-weight:700;color:#222;}
+  .kpi-lbl{font-size:0.7rem;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
+  @media print{body{padding:16px;}}
+</style></head>
+<body>
+  <h1>Reporte de Preinscripción — ${label}</h1>
+  <p class="meta">Ingeniería de Sonido · UNTREF · Generado el ${today}</p>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-val">${total}</div><div class="kpi-lbl">Total inscripciones</div></div>
+    <div class="kpi"><div class="kpi-val">${scored.length}</div><div class="kpi-lbl">Materias con demanda</div></div>
+    <div class="kpi"><div class="kpi-val">${scored[0]?.count||0}</div><div class="kpi-lbl">Mayor demanda (${scored[0]?.name.split(' ').slice(0,2).join(' ')||'—'})</div></div>
+    <div class="kpi"><div class="kpi-val">${silent.length}</div><div class="kpi-lbl">Cuellos silenciosos</div></div>
+  </div>
+  ${silentHtml}
+  <h2>Score de Prioridad Institucional</h2>
+  <p style="font-size:0.78rem;color:#666;margin-bottom:12px;">
+    Score = Interesados × (Impacto de red + 1). Ordenado por urgencia institucional.
+    Basado en betweenness centrality del grafo de correlativas (Freeman, 1977).
+  </p>
+  <table>
+    <thead><tr>
+      <th>#</th><th>Materia</th><th>Año</th>
+      <th>Interesados</th><th>Impacto</th><th>Score</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <p style="font-size:0.7rem;color:#999;margin-top:24px;">
+    Resonancia Curricular v${new Date().getFullYear()} · UNTREF · Ingeniería de Sonido
+  </p>
+</body></html>`;
+
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `reporte-preinscripcion-${label}.html`;
+    a.click();
+    toast(`Reporte ${label} exportado`, 'success');
 }
 
 // ================================================================
